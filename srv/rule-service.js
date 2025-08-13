@@ -7,9 +7,12 @@ class RuleService extends cds.ApplicationService {
 
     this.before(["CREATE", "UPDATE"], Rules, this.executeRuleHandler);
 
+    // TODO: fix this
+    /*
     this.after("READ", Rules, async (data, req) => {
       console.log("READ event triggered"); // remove later
     });
+    */
 
     return super.init();
   }
@@ -17,52 +20,79 @@ class RuleService extends cds.ApplicationService {
   async executeRuleHandler(req) {
     console.log("running rule handler..."); // remove later
 
-    const { targetEntity, fieldName, operator, value } = req.data || {};
+    const { targetEntity, conditions } = req.data || {};
 
-    if (!targetEntity || !fieldName || !operator) {
-      req.error(400, "Missing required rule parameters");
+    if (!targetEntity) {
+      req.error(400, "Missing required target entity");
       return;
     }
 
-    const target = this.entities[targetEntity] || cds.model.definitions[targetEntity];
+    // there should be at least one condition
+    if (!Array.isArray(conditions) || conditions.length === 0) {
+      req.error(400, "A rule must have at least one condition");
+      return;
+    }
+
+    // look for the entity in the serives else globally
+    const target =
+      this.entities[targetEntity] || cds.model.definitions[targetEntity];
     if (!target) {
       req.error(400, `Target entity '${targetEntity}' not found`);
       return;
     }
-
-    //console.log(target.elements)
 
     if (!target.elements) {
       console.error(`Entity has no elements: ${targetEntity}`);
       return;
     }
 
-    const entityName = target.name;
-
-    let condition;
-    switch (operator) {
-      case "=":
-      case ">":
-      case "<":
-        condition = cds.parse.expr(`${fieldName} ${operator} '${value}'`);
-        break;
-      case "contains":
-        condition = cds.parse.expr(`contains(${fieldName}, '${value}')`);
-        break;
-      case "startswith":
-        condition = cds.parse.expr(`startswith(${fieldName}, '${value}')`);
-        break;
-      default:
-        req.error(400, `Unsupported operator '${operator}'`);
+    let combinedExpr = "";
+    for (let i = 0; i < conditions.length; i++) {
+      const { fieldName, operator, value, binaryAnd } = conditions[i];
+      if (!fieldName || !operator) {
+        req.error(400, `Missing parameters in condition ${i + 1}`);
         return;
+      }
+
+      const condStr = this.buildConditionString(operator, fieldName, value);
+
+      if (combinedExpr === "") {
+        combinedExpr = condStr;
+      } else {
+        combinedExpr += binaryAnd ? ` AND ${condStr}` : ` OR ${condStr}`;
+      }
     }
 
-    const result = await SELECT.from(entityName).where(condition);
-    
+    // Parse the final combined expression
+    const combinedCondition = cds.parse.expr(combinedExpr);
+
+    // Execute query
+    const result = await SELECT.from(target.name).where(combinedCondition);
+
+    // put the result in the result field
     req.data.results = JSON.stringify(result);
 
     if (result.length === 0) {
       req.error(400, `Rule validation failed for ${targetEntity}`);
+    } else {
+      console.log(
+        `Rule validation succeeded: ${result.length} matching record(s)`
+      );
+    }
+  }
+
+  buildConditionString(operator, fieldName, value) {
+    switch (operator) {
+      case "=":
+      case ">":
+      case "<":
+        return `${fieldName} ${operator} '${value}'`;
+      case "contains":
+        return `contains(${fieldName}, '${value}')`;
+      case "startswith":
+        return `startswith(${fieldName}, '${value}')`;
+      default:
+        throw new Error(`Unsupported operator '${operator}'`);
     }
   }
 }

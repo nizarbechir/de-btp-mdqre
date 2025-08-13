@@ -1,4 +1,0 @@
-ID;name;description;targetEntity;fieldName;operator;value
-guid-1;Test Rule 1;Check BP name equals John;A_BusinessPartner;BusinessPartnerFullName;=;John Doe
-guid-2;Test Rule 2;Find BP starting with AC;A_BusinessPartner;BusinessPartnerFullName;startswith;AC
-
