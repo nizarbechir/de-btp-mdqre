@@ -34,7 +34,7 @@ Content-Type: application/json
       "fieldName": "BusinessPartnerFullName",
       "operator": "contains",
       "value": "Corp",
-      "binaryAnd": true
+      "binaryAnd": false
     },
     {
       "fieldName": "NameCountry",

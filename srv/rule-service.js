@@ -56,10 +56,10 @@ class RuleService extends cds.ApplicationService {
 
       const condStr = this.buildConditionString(operator, fieldName, value);
 
-      if (combinedExpr === "") {
-        combinedExpr = condStr;
-      } else {
-        combinedExpr += binaryAnd ? ` AND ${condStr}` : ` OR ${condStr}`;
+      combinedExpr += condStr;
+      // concat after only if not the last condition
+      if (i < conditions.length - 1) {
+        combinedExpr += binaryAnd ? " AND " : " OR ";
       }
     }
 
