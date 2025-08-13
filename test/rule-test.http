@@ -1,0 +1,20 @@
+
+
+@baseUrl = http://localhost:4004
+
+
+### get all rules
+GET {{baseUrl}}/rule/Rules
+
+### add a new rule
+POST {{baseUrl}}/rule/Rules
+Content-Type: application/json
+
+{
+  "name": "Test Rule 1",
+  "description": "Check BP name equals John",
+  "targetEntity": "API_BUSINESS_PARTNER.A_BusinessPartner",
+  "fieldName": "BusinessPartnerFullName",
+  "operator": "=",
+  "value": "John Doe"
+}
