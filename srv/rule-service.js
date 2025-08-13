@@ -57,12 +57,11 @@ class RuleService extends cds.ApplicationService {
       const condStr = this.buildConditionString(operator, fieldName, value);
 
       combinedExpr += condStr;
-      // concat after only if not the last condition
+      // concat only if not the last condition
       if (i < conditions.length - 1) {
         combinedExpr += binaryAnd ? " AND " : " OR ";
       }
     }
-
     // Parse the final combined expression
     const combinedCondition = cds.parse.expr(combinedExpr);
 

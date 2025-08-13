@@ -7,7 +7,8 @@ entity Rule : cuid, managed {
     name        : String(100)   @mandatory;
     description : String(255);
     targetEntity: String(100)   @mandatory;             // e.g. "A_BusinessPartner"
-    conditions  : Composition of many Condition on conditions.rule = $self;
+    conditions  : Composition of many Condition
+                    on conditions.rule = $self;
     results     : LargeString;
 }
 
