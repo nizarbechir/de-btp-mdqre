@@ -8,9 +8,9 @@ POST {{baseUrl}}/rule/Rules
 Content-Type: application/json
 
 {
-  "name": "Test Rule 1",
+  "name": "Test Rule 3",
   "description": "Check BP name equals John",
-  "targetEntity": "API_BUSINESS_PARTNER.A_BusinessPartner",
+  "targetEntity": "A_BusinessPartner",
   "conditions": [
     {
       "fieldName": "BusinessPartnerFullName",
@@ -26,9 +26,9 @@ POST {{baseUrl}}/rule/Rules
 Content-Type: application/json
 
 {
-  "name": "Test Rule 2",
+  "name": "Test Rule 4",
   "description": "Check BP name and country",
-  "targetEntity": "API_BUSINESS_PARTNER.A_BusinessPartner",
+  "targetEntity": "A_BusinessPartner",
   "conditions": [
     {
       "fieldName": "BusinessPartnerFullName",

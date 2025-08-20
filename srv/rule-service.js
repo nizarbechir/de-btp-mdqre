@@ -2,8 +2,12 @@ const cds = require("@sap/cds");
 const { SELECT } = cds.ql;
 
 class RuleService extends cds.ApplicationService {
-  init() {
+  async init() {
     const { Rules } = this.entities;
+
+    // Connect to remote services and keep references for reuse
+    this.S4bupa = await cds.connect.to("API_BUSINESS_PARTNER");
+    this.remoteService = await cds.connect.to("RemoteService"); 
 
     this.before(["CREATE", "UPDATE"], Rules, this.executeRuleHandler);
 
@@ -33,14 +37,16 @@ class RuleService extends cds.ApplicationService {
       return;
     }
 
-    // look for the entity in the serives else globally
-    const target =
-      this.entities[targetEntity] || cds.model.definitions[targetEntity];
+    // --- look up entities in different services ---
+    const s4Entity = this.S4bupa.entities[targetEntity];
+    const remoteEntity = this.remoteService.entities[targetEntity];
+
+    const target = s4Entity || remoteEntity;
+
     if (!target) {
       req.error(400, `Target entity '${targetEntity}' not found`);
       return;
     }
-
     if (!target.elements) {
       console.error(`Entity has no elements: ${targetEntity}`);
       return;
@@ -66,7 +72,7 @@ class RuleService extends cds.ApplicationService {
     const combinedCondition = cds.parse.expr(combinedExpr);
 
     // Execute query
-    const result = await SELECT.from(target.name).where(combinedCondition);
+    const result = await this.S4bupa.run(SELECT.from(target.name).where(combinedCondition));
 
     // put the result in the result field
     req.data.results = JSON.stringify(result);

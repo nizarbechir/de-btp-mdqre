@@ -1,0 +1,7 @@
+<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:macros="sap.fe.macros">
+	<VBox id="conditionList" items="{path: 'conditions'}">
+    	<Text id="conditionField" text="{fieldName}" />
+    	<Text id="conditionOperator" text="{operator}" />
+    	<Text id="conditionValue" text="{value}" />
+	</VBox>
+</core:FragmentDefinition>
