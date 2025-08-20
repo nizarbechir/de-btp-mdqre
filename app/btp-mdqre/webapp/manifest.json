@@ -128,7 +128,8 @@
           "options": {
             "settings": {
               "navigation": {},
-              "contextPath": "/Rules"
+              "contextPath": "/Rules",
+              "editableHeaderContent": false
             }
           }
         }

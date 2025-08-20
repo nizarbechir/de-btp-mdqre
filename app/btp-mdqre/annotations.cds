@@ -31,7 +31,7 @@ annotate service.Rules with @(
         {
             $Type : 'UI.ReferenceFacet',
             ID : 'GeneratedFacet1',
-            Label : '{i18n>Overview1}',
+            Label : '{i18n>General}',
             Target : '@UI.FieldGroup#GeneratedGroup',
         },
         {
@@ -147,22 +147,22 @@ annotate service.Rules with @(
             {
                 $Type : 'UI.DataField',
                 Value : conditions.fieldName,
-                Label : 'fieldName',
+                Label : '{i18n>Field}',
             },
             {
                 $Type : 'UI.DataField',
                 Value : conditions.operator,
-                Label : 'operator',
+                Label : '{i18n>Operator}',
             },
             {
                 $Type : 'UI.DataField',
                 Value : conditions.value,
-                Label : 'value',
+                Label : '{i18n>Value}',
             },
             {
                 $Type : 'UI.DataField',
                 Value : conditions.binaryAnd,
-                Label : 'binaryAnd',
+                Label : '{i18n>BinaryAnd}',
             },
         ],
     },
