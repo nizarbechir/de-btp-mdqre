@@ -26,14 +26,9 @@ class RuleService extends cds.ApplicationService {
 
     const { targetEntity, conditions } = req.data || {};
 
-    if (!targetEntity) {
-      req.error(400, "Missing required target entity");
-      return;
-    }
-
     // there should be at least one condition
     if (!Array.isArray(conditions) || conditions.length === 0) {
-      req.error(400, "A rule must have at least one condition");
+      req.data.results = null;
       return;
     }
 

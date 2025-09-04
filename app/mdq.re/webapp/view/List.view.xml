@@ -1,0 +1,43 @@
+<mvc:View
+    controllerName="mdq.re.controller.List"
+    xmlns:mvc="sap.ui.core.mvc"
+    displayBlock="true"
+    xmlns="sap.m">
+
+    <Page id="ruleListPage" title="Rule List">
+        <content>
+            <List
+                id="ruleList"
+                width="auto"
+                items="{
+                    path: '/Rules',
+                    sorter: { path: 'name', descending: false }
+                }"
+                growing="true"
+                growingThreshold="20">
+
+                <headerToolbar>
+                    <Toolbar id="toolbar">
+                        <Title id="toolbarTitle" text="Rules" level="H2"/>
+                        <ToolbarSpacer id="spacer"/>
+                        <Button
+                            id="addRule"
+                            text="Add Rule"
+                            type="Emphasized"
+                            press="onAddRule"/>
+                    </Toolbar>
+                </headerToolbar>
+
+                <items>
+                    <StandardListItem
+                        id="item"
+                        title="{name}"
+                        description="{description}"
+                        type="Navigation"
+                        press="onItemPress"/>
+                </items>
+
+            </List>
+        </content>
+    </Page>
+</mvc:View>

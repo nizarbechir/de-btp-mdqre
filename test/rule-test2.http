@@ -9,13 +9,13 @@ Content-Type: application/json
 
 {
   "name": "Test Rule 3",
-  "description": "Check BP name equals John",
+  "description": "Check BP name equals Energy Corp",
   "targetEntity": "A_BusinessPartner",
   "conditions": [
     {
       "fieldName": "BusinessPartnerFullName",
       "operator": "=",
-      "value": "John Doe",
+      "value": "Energy Corp",
       "binaryAnd": true
     }
   ]
@@ -44,4 +44,45 @@ Content-Type: application/json
     }
   ]
 }
+
+### get all rules
+GET {{baseUrl}}/rule/Rules
+
+### rule with
+POST {{baseUrl}}/rule/Rules
+Content-Type: application/json
+
+{
+  "name": "Test Rule 5",
+  "description": "This is a test to check if i can create a rule",
+  "targetEntity": "A_BusinessPartner",
+  "conditions": [
+    {
+      "fieldName": "BusinessPartnerFullName",
+      "operator": "contains",
+      "value": "Corp",
+      "binaryAnd": false
+    }
+  ]
+}
+
+
+### update a rule
+PATCH {{baseUrl}}/rule/Rules(6fa82608-f633-454a-9bce-37889e556dcc)
+Content-Type: application/json
+
+{
+  "name": "Rule 44",
+  "targetEntity": "A_BusinessPartner"
+}
+
+###
+### update a rule
+PATCH {{baseUrl}}/rule/Rules(6fa82608-f633-454a-9bce-37889e556dcc)
+Content-Type: application/json
+
+{
+  "name": "Rule 44",
+}
+
 

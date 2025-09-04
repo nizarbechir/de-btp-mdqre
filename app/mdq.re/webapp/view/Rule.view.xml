@@ -1,0 +1,264 @@
+<mvc:View
+    controllerName="mdq.re.controller.Rule"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:uxap="sap.uxap"
+    xmlns:m="sap.m"
+    xmlns:f="sap.ui.layout.form"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    
+    <uxap:ObjectPageLayout
+        id="objectPageLayout"
+        upperCaseAnchorBar="false"
+        enableLazyLoading="false">
+        
+        <uxap:headerTitle>
+            <uxap:ObjectPageDynamicHeaderTitle id="header">
+                <uxap:expandedHeading>
+                    <m:Title id="headerTitle" text="{name}" wrapping="true"/>
+                </uxap:expandedHeading>
+                <uxap:snappedHeading>
+                    <m:FlexBox id="flexbox" fitContainer="true" alignItems="Center">
+                        <m:Title id="snappedTitle" text="{name}" wrapping="true"/>
+                    </m:FlexBox>
+                </uxap:snappedHeading>
+                <uxap:expandedContent>
+					<m:Text id="descTitle" text="{description}"/>
+				</uxap:expandedContent>
+				<uxap:snappedContent>
+					<m:Text id="descTitleSnapped" text="{description}"/>
+				</uxap:snappedContent>
+
+                <uxap:actions>
+                    <m:Button
+                        id="editButton"
+                        text="Edit"
+                        type="Emphasized"
+                        press="onEdit"/>
+                    <m:Button
+                        id="saveButton"
+                        text="Save"
+                        type="Emphasized"
+                        press="onSave"
+                        visible="false"/>
+                    <m:Button
+                        id="cancelButton"
+                        text="Cancel"
+                        press="onCancel"
+                        visible="false"/>
+                    <m:Button
+                        id="deleteButton"
+                        text="Delete"
+                        type="Transparent"
+                        press="onDelete"/>
+                    <m:Button
+                        id="closeButton"
+                        icon="sap-icon://decline" 
+                        type="Transparent"
+                        press="onNavBack"/>
+                </uxap:actions>
+            </uxap:ObjectPageDynamicHeaderTitle>
+        </uxap:headerTitle>
+        
+        <uxap:headerContent>
+            <m:FlexBox 
+                id="headeritems"
+                direction="Row" 
+                alignItems="Center" 
+                justifyContent="SpaceBetween" 
+                >
+                
+            <m:FlexBox id="flexbox1" direction="Column" class="sapUiMediumMargin">
+                <m:Label id="ruleIdLabel" text="Rule ID:" class="sapUiTinyMarginBottom"/>
+                <m:Text id="ruleIdText" text="{ID}"/>
+            </m:FlexBox>
+            <m:FlexBox id="flexbox3" direction="Column" class="sapUiMediumMargin">
+                <m:Label id="priorityLabel" text="Priority:" class="sapUiTinyMarginBottom"/>
+                <m:Text id="priorityText" text="{priority/code}"/>
+            </m:FlexBox>
+            <m:FlexBox id="flexbox4" direction="Column" class="sapUiMediumMargin">
+                <m:Label id="createdAtLabel" text="Created:" class="sapUiTinyMarginBottom"/>
+                <m:Text id="createdAtText" text="{createdAt}"/>
+            </m:FlexBox>
+            </m:FlexBox>
+        </uxap:headerContent>
+        
+        <uxap:sections>
+            
+            <uxap:ObjectPageSection
+                id="generalSection"
+                title="General">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection id="generalSubSection">
+                        <uxap:blocks>
+                            <f:SimpleForm
+                                id="generalForm"
+                                editable="false"
+                                layout="ResponsiveGridLayout"
+                                labelSpanXL="3"
+                                labelSpanL="3"
+                                labelSpanM="3"
+                                labelSpanS="12"
+                                adjustLabelSpan="false"
+                                emptySpanXL="4"
+                                emptySpanL="4"
+                                emptySpanM="4"
+                                emptySpanS="0"
+                                columnsXL="1"
+                                columnsL="1"
+                                columnsM="1"
+                                singleContainerFullSize="false">
+                                
+                                <f:content>
+                                    
+                                    <m:Label id="nameLabel" text="Name" required="true"/>
+                                    <m:Input
+                                        id="nameInput"
+                                        value="{name}"
+                                        editable="false"/>
+                                    
+                                    <m:Label id="descriptionLabel" text="Description"/>
+                                    <m:Input
+                                        id="descriptionInput"
+                                        value="{description}"
+                                        editable="false"/>
+                                    
+                                    <m:Label id="targetEntityFormLabel" text="Target Entity" required="true"/>
+                                    <m:Input
+                                        id="targetEntityInput"
+                                        value="{targetEntity}"
+                                        editable="false"
+                                        showValueHelp="true"
+                                        valueHelpOnly="true"
+                                        valueHelpRequest="handleValueHelp"/>
+                                    
+                                    <m:Label id="priorityFormLabel" text="Priority"/>
+                                    <m:Select
+                                        id="prioritySelect"
+                                        selectedKey="{priority_code}"   
+                                        editable="false">
+                                        <core:Item id="high" key="H" text="High"/>
+                                        <core:Item id="medium" key="M" text="Medium"/>
+                                        <core:Item id="low" key="L" text="Low"/>
+                                    </m:Select>
+                                </f:content>
+                            </f:SimpleForm>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+            
+            <uxap:ObjectPageSection
+                id="conditionsSection"
+                title="Conditions">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection id="conditionsSubSection">
+                        <uxap:blocks>
+                            <m:Panel id="conditionsPanel">
+                                <m:headerToolbar>
+                                    <m:Toolbar id="conditionsToolbar">
+                                        <m:Title id="conditionsTitle" text="Rule Conditions" level="H4"/>
+                                        <m:ToolbarSpacer id="spacer1"/>
+                                        <m:Button
+                                            id="addConditionButton"
+                                            text="Add Condition"
+                                            type="Transparent"
+                                            icon="sap-icon://add"
+                                            press="onAddCondition"
+                                            visible="false"/>
+                                    </m:Toolbar>
+                                </m:headerToolbar>
+                                <m:content>
+                                    <m:Table
+                                        id="conditionsTable"
+                                        items="{
+                                            path: 'conditions'
+                                            }"
+                                        mode="None"
+                                        delete="onDeleteCondition">
+                                        <m:columns>
+                                            <m:Column id="column1">
+                                                <m:Text id="fieldText" text="Field Name"/>
+                                            </m:Column>
+                                            <m:Column id="column2">
+                                                <m:Text id="operatorText" text="Operator"/>
+                                            </m:Column>
+                                            <m:Column id="column3">
+                                                <m:Text id="valueText" text="Value"/>
+                                            </m:Column>
+                                            <m:Column id="column4">
+                                                <m:Text id="andText" text="Logical Operator"/>
+                                            </m:Column>
+                                        </m:columns>
+                                        <m:items>
+                                            <m:ColumnListItem id="items">
+                                                <m:cells>
+                                                    <m:Input
+                                                        id="fieldInput"
+                                                        value="{fieldName}"
+                                                        editable="false"
+                                                        showValueHelp="true"
+                                                        valueHelpOnly="true"
+                                                        valueHelpRequest="handleFieldValueHelp"/>
+                                                    <m:Select
+                                                        id="operatorInput"
+                                                        selectedKey="{operator}"
+                                                        editable="false">
+                                                        <core:Item id="equal" key="=" text="Equals (=)"/>
+                                                        <core:Item id="greater" key=">" text="Greater than (>)"/>
+                                                        <core:Item id="less" key="&lt;" text="Less than (&lt;)"/>
+                                                        <core:Item id="contains" key="contains" text="Contains"/>
+                                                        <core:Item id="starts" key="startswith" text="Starts with"/>
+                                                    </m:Select>
+                                                    <m:Input
+                                                        id="valueInput"
+                                                        value="{value}"
+                                                        editable="false"/>
+                                                    <m:Select
+                                                        id="andInput"
+                                                        selectedKey="{binaryAnd}"
+                                                        editable="false">
+                                                        <core:Item id="and" key="Yes" text="AND"/>
+                                                        <core:Item id="or" key="No" text="OR"/>
+                                                    </m:Select>
+                                                </m:cells>
+                                            </m:ColumnListItem>
+                                        </m:items>
+                                    </m:Table>
+                                </m:content>
+                            </m:Panel>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+            
+            <!-- Results Section -->
+            <uxap:ObjectPageSection
+                id="resultsSection"
+                title="Results">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection id="resultsSubSection">
+                        <uxap:blocks>
+                            <m:Panel id="resultsPanel">
+                                <m:headerToolbar>
+                                    <m:Toolbar id="resultsToolbar">
+                                        <m:Title id="resultsTitle" text="Rule Results" level="H4"/>
+                                    </m:Toolbar>
+                                </m:headerToolbar>
+                                <m:content>
+                                    <m:FormattedText
+                                        id="resultsText"
+                                        htmlText="{results}"
+                                        class="sapUiMediumMargin"/>
+                                </m:content>
+                            </m:Panel>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+            
+        </uxap:sections>
+        
+    </uxap:ObjectPageLayout>
+    
+</mvc:View>

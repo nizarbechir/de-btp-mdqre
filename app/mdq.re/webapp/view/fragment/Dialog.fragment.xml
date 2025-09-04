@@ -1,0 +1,19 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <SelectDialog
+        id="entitySelectDialog"
+        title="Select Target Entity"
+        confirm="onEntityDialogConfirm"
+        search="onEntitySearch"
+        liveChange="onEntitySearch"
+        items="{
+            path: 'bpServiceDoc>/value'
+        }">
+        <StandardListItem
+            id="entities"
+            title="{bpServiceDoc>name}"
+            type="Active"
+            press="onEntityDialogConfirm"/>
+    </SelectDialog>
+</core:FragmentDefinition>

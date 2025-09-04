@@ -6,11 +6,10 @@ using {
     sap.common.CodeList
 } from '@sap/cds/common';
 
-// version 2
 entity Rule : cuid, managed {
     name         : String(100) @mandatory;
     description  : String(255);
-    targetEntity : String(100) @mandatory; // e.g. "A_BusinessPartner"
+    targetEntity : String(100); // e.g. "A_BusinessPartner"
     priority     : Association to Priority default 'M';
     conditions   : Composition of many Condition
                        on conditions.rule = $self;

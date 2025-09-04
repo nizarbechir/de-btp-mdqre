@@ -1,0 +1,19 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core">
+    <SelectDialog
+        id="fieldSelectDialog"
+        title="Select Field"
+        class="sapUiMediumMargin"
+        confirm="onFieldDialogConfirm"
+        search="onFieldSearch"
+        liveChange="onFieldSearch"
+        items="{
+            path: 'fieldModel>/value'
+        }">
+        <StandardListItem
+            id="fields"
+            title="{fieldModel>name}"
+            description="{fieldModel>type}"
+            type="Active"
+            press="onFieldDialogConfirm"/>
+    </SelectDialog>
+</core:FragmentDefinition>
