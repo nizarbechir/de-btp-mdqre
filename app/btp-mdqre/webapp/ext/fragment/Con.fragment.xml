@@ -1,5 +1,0 @@
-<core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m" xmlns:macros="sap.fe.macros">
-	<VBox core:require="{ handler: 'btpmdqre/ext/fragment/Con'}">
-		<Button text="Con" press="handler.onPress" />
-	</VBox>
-</core:FragmentDefinition>
