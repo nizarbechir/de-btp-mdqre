@@ -84,6 +84,7 @@ sap.ui.define(
             function () {
               MessageToast.show("Rule created successfully");
               // If no ID is available, just navigate back or refresh
+              this._resetForm();
               this._navigateBack();
             }.bind(this)
           )

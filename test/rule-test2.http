@@ -76,13 +76,20 @@ Content-Type: application/json
   "targetEntity": "A_BusinessPartner"
 }
 
-###
 ### update a rule
 PATCH {{baseUrl}}/rule/Rules(6fa82608-f633-454a-9bce-37889e556dcc)
 Content-Type: application/json
 
 {
   "name": "Rule 44",
+}
+
+### update a rule
+PATCH {{baseUrl}}/rule/Conditions(2b3e9f6c-3863-4eff-ad1a-ebec48bb465f)
+Content-Type: application/json
+
+{
+  "operator": "equals"
 }
 
 
