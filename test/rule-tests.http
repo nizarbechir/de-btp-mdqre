@@ -1,0 +1,138 @@
+@baseUrl=http://localhost:4004
+
+###
+# @name create_rule
+POST {{baseUrl}}/rules/Rules
+Content-Type: application/json
+
+{
+    "description":"my first rule",
+    "andBinaryOperator":true,
+    "entity_name":"A_AddressHomePageURL",
+    "entity_service_name":"BusinessPartnerService"
+}
+###
+@ruleId={{create_rule.response.body.$.ID}}
+###
+GET {{baseUrl}}/rules/Attributes?$filter=entity_name eq 'A_AddressEmailAddress'
+###
+POST {{baseUrl}}/rules/Conditions
+Accept-Language: de
+Content-Type: application/json
+
+
+{
+    "operator":"STARTS WITH",
+    "value":"info@",
+    "rule_ID":"{{ruleId}}",
+    "attribute_name":"EmailAddress",
+    "attribute_entity_name":"A_AddressEmailAddress",
+    "attribute_entity_service_name":"BusinessPartnerService"
+}
+###
+POST {{baseUrl}}/rules/Conditions
+Accept-Language: de
+Content-Type: application/json
+
+{
+    "operator":">",
+    "value":"16",
+    "rule_ID":"{{ruleId}}",
+    "attribute_name":"IsDefaultEmailAddress",
+
+}
+
+###
+POST {{baseUrl}}/rules/Conditions
+Accept-Language: de
+Content-Type: application/json
+
+
+{
+    "operator":"=",
+    "value":"true",
+    "rule_ID":"2bdea009-e23c-4c20-b6f3-7957eb78b8fe",
+    "attribute_name":"IsDefaultURLAddress"
+   
+}
+###
+POST {{baseUrl}}/rules/Actions
+Accept-Language: de
+Content-Type: application/json
+
+
+{
+    "operator":">",
+    "value":"16",
+    "rule_ID":"{{ruleId}}",
+    "attribute_name":"URLFieldLength"
+
+}
+###
+GET {{baseUrl}}/rules/Violations
+
+###
+POST {{baseUrl}}/rules/getViolations
+Content-Type: application/json
+
+    {
+        "ruleID":"{{ruleId}}"
+    }
+###
+POST {{baseUrl}}/rules/getSelects
+Content-Type: application/json
+
+{
+    "ruleID":"f4fd2c56-a3d9-428c-87dc-206154b52d01"
+}
+###
+# @name getRecord
+GET {{baseUrl}}/rules/Records?$filter=ID eq '751ecdcf-0ae3-4962-99ed-d9ca366fadb1'
+
+###
+@record={{getRecord.response.body.$.value[0].ID}}
+
+###
+GET {{baseUrl}}/rules/Attributes?$filter=type eq 'number' 
+###
+GET {{baseUrl}}/rules/Elements?$filter=attribute_entity_name eq 'A_AddressHomePageURL'
+###
+GET {{baseUrl}}/rules/Elements?$filter=attribute_name eq 'NameCountry'
+###
+PUT {{baseUrl}}/rule/Rules('8d1bfd54-de48-44ca-9244-3e2575b99046')
+Content-Type: application/json
+
+{
+    
+    "entity_service_name":"SalesOrderService"
+
+
+}
+
+###
+PUT {{baseUrl}}/rules/Conditions('3791acbe-1b1e-46fd-b1cf-e3650bc3a4f9')
+Content-Type: application/json
+
+{
+    "attribute_name":"AccountingDocExternalReference"
+}
+
+###
+GET {{baseUrl}}/rules/Records
+###
+GET {{baseUrl}}/rules/Elements?$filter=record_ID eq '296143e1-353b-4fac-baa1-0dcc86f221ad' 
+
+###
+PUT {{baseUrl}}/rules/Rules('3791acbe-1b1e-46fd-b1cf-e3650bc3a4f9')
+Content-Type: application/json
+
+{
+     "entity_service_name":"SalesOrderService"
+}
+###
+GET {{baseUrl}}/rules/Attributes?$filter=name eq 'BusinessPartnerFullName'
+###
+GET {{baseUrl}}/rules/Attributes?$filter=name eq 'AccountingDocExternalReference'
+
+###
+GET {{baseUrl}}/rules/Rules('ed8bb234-189c-45cb-abe6-a24f209ac405')?$expand=Conditions

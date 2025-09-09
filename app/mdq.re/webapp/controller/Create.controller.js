@@ -27,8 +27,7 @@ sap.ui.define(
           description: "",
           entity_service_name: "",
           entity_name: "",
-          conditionAndBinaryOperator: true,
-          actionAndBinaryOperator: true,
+          andBinaryOperator: true,
           priority: "Medium",
           conditions: [],
           actions: [],
@@ -48,8 +47,8 @@ sap.ui.define(
       onCreate: function () {
         var oODataModel = this.getView().getModel("odata");
         var oViewModel = this.getView().getModel();
-        console.log("data: ", oODataModel); 
-        //console.log("view: ", oViewModel); 
+        console.log("data: ", oODataModel);
+        //console.log("view: ", oViewModel);
         console.log("ViewModel data: ", oViewModel.getData());
 
         // Validate required fields
@@ -66,8 +65,7 @@ sap.ui.define(
           description: oData.description,
           entity_name: oData.entity_name,
           entity_service_name: oData.entity_service_name,
-          conditionAndBinaryOperator: oData.conditionAndBinaryOperator === "true",
-          actionAndBinaryOperator: oData.actionAndBinaryOperator === "true",
+          andBinaryOperator: oData.andBinaryOperator === "true",
           priority: oData.priority || oData.priority_code, // normalize priority
 
           // Capitalized keys to match OData
@@ -75,14 +73,18 @@ sap.ui.define(
             return {
               attribute_name: condition.attribute_name,
               operator: condition.operator,
-              value: condition.value
+              value: condition.value,
+              attribute_entity_name: oData.entity_name,
+              attribute_entity_service_name: oData.entity_service_name,
             };
           }),
           Actions: (oData.actions || []).map(function (action) {
             return {
               attribute_name: action.attribute_name,
               operator: action.operator,
-              value: action.value
+              value: action.value,
+              attribute_entity_name: oData.entity_name,
+              attribute_entity_service_name: oData.entity_service_name,
             };
           }),
         };
@@ -92,18 +94,22 @@ sap.ui.define(
         var oContext = oBinding.create(oCreateData);
 
         // Handle creation
-        oContext.created()
-          .then(function () {
-            MessageToast.show("Rule created successfully");
-            this._resetForm();
-            this._navigateBack();
-          }.bind(this))
+        oContext
+          .created()
+          .then(
+            function () {
+              MessageToast.show("Rule created successfully");
+              this._resetForm();
+              this._navigateBack();
+            }.bind(this)
+          )
           .catch(function (oError) {
-            MessageBox.error("Error creating rule: " + (oError.message || "Unknown error"));
+            MessageBox.error(
+              "Error creating rule: " + (oError.message || "Unknown error")
+            );
             console.error("Creation error:", oError);
           });
       },
-
 
       _validateRequiredFields: function () {
         var oData = this.getView().getModel().getData();
@@ -138,11 +144,7 @@ sap.ui.define(
         var oData = oModel.getData();
 
         // Check if there are unsaved changes
-        if (
-          oData.name ||
-          oData.description ||
-          oData.entity_name
-        ) {
+        if (oData.name || oData.description || oData.entity_name) {
           MessageBox.confirm(
             "You have unsaved changes. Do you want to leave without saving?",
             {
@@ -182,7 +184,7 @@ sap.ui.define(
        */
       onDeleteCondition: function (oEvent) {
         var oModel = this.getView().getModel();
-        var aConditions = oModel.getProperty("/conditions");
+        var aConditions = oModel.getProperty("/Conditions");
         var oBindingContext = oEvent
           .getParameter("listItem")
           .getBindingContext();
@@ -190,14 +192,13 @@ sap.ui.define(
 
         // Remove the condition
         aConditions.splice(parseInt(iIndex), 1);
-        oModel.setProperty("/conditions", aConditions);
+        oModel.setProperty("/Conditions", aConditions);
         MessageToast.show("Condition deleted");
       },
 
-
       onAddAction: function () {
         var oModel = this.getView().getModel();
-        var aActions = oModel.getProperty("/actions") || [];
+        var aActions = oModel.getProperty("/Actions") || [];
 
         // Add new empty condition
         aActions.push({
@@ -206,7 +207,7 @@ sap.ui.define(
           value: "",
         });
 
-        oModel.setProperty("/actions", aActions);
+        oModel.setProperty("/Actions", aActions);
         MessageToast.show("New action added");
       },
 
@@ -215,7 +216,7 @@ sap.ui.define(
        */
       onDeleteAction: function (oEvent) {
         var oModel = this.getView().getModel();
-        var aActions = oModel.getProperty("/actions");
+        var aActions = oModel.getProperty("/Actions");
         var oBindingContext = oEvent
           .getParameter("listItem")
           .getBindingContext();
@@ -223,7 +224,7 @@ sap.ui.define(
 
         // Remove the condition
         aActions.splice(parseInt(iIndex), 1);
-        oModel.setProperty("/actions", aActions);
+        oModel.setProperty("/Actions", aActions);
         MessageToast.show("Action deleted");
       },
 
@@ -247,7 +248,7 @@ sap.ui.define(
 
         // Create JSONModel for service document
         var oJsonModel = new JSONModel();
-        oJsonModel.loadData("/odata/v4/api-business-partner"); // loads { value: [...] }
+        oJsonModel.loadData("/odata/v4/business-partner"); // loads { value: [...] }
 
         this._entityDialog.then(
           function (oDialog) {
@@ -319,7 +320,7 @@ sap.ui.define(
 
         // Get the target entity from the model
         var oModel = this.getView().getModel();
-        var sEntity = oModel.getProperty("/targetEntity");
+        var sEntity = oModel.getProperty("/entity_name");
 
         if (!sEntity) {
           MessageToast.show("Please select a target entity first");
@@ -330,7 +331,7 @@ sap.ui.define(
         this._oFieldHelpSource = oEvent.getSource();
 
         // Load metadata and extract only fields of that entity
-        fetch("/odata/v4/api-business-partner/$metadata")
+        fetch("/odata/v4/business-partner/$metadata")
           .then(function (response) {
             return response.text();
           })

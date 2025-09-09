@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/rule/",
+        "uri": "/rules/",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -25,7 +25,7 @@
         }
       },
       "businessPartnerService": {
-        "uri": "/odata/v4/api-business-partner/",
+        "uri": "/odata/v4/business-partner/",
         "type": "OData",
         "settings": {
           "annotations": [],
@@ -127,23 +127,17 @@
         {
           "name": "List",
           "pattern": "",
-          "target": [
-            "List"
-          ]
+          "target": ["List"]
         },
         {
           "name": "Rule",
           "pattern": "Rule/{ruleId}",
-          "target": [
-            "Rule"
-          ]
+          "target": ["Rule"]
         },
         {
           "name": "Create",
           "pattern": "create",
-          "target": [
-            "Create"
-          ]
+          "target": ["Create"]
         }
       ],
       "targets": {

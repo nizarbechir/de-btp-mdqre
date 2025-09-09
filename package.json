@@ -12,6 +12,7 @@
     "@sap-cloud-sdk/resilience": "^3.26.4",
     "@sap-cloud-sdk/util": "^3.26.4",
     "@sap/cds": "^9",
+    "dotenv": "^17.2.2",
     "express": "^4"
   },
   "engines": {
@@ -21,8 +22,8 @@
     "@cap-js/cds-types": "^0.13.0",
     "@cap-js/sqlite": "^2",
     "@sap/cds-dk": ">=8",
-    "rimraf": "^5.0.5",
-    "mbt": "^1.2.29"
+    "mbt": "^1.2.29",
+    "rimraf": "^5.0.5"
   },
   "scripts": {
     "start": "cds-serve",
@@ -37,18 +38,16 @@
       "API_BUSINESS_PARTNER": {
         "kind": "odata-v2",
         "model": "srv/external/API_BUSINESS_PARTNER",
-        "[sandbox]": {
-          "credentials": {
-            "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_BUSINESS_PARTNER/",
-            "headers": {
-              "APIKey": "9CAxaiyxqcLFpPwK2KjpBrrhw7E7uAAL"
-            }
+        "credentials": {
+          "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_BUSINESS_PARTNER/",
+          "headers": {
+            "APIkey": "uGDALeEHcgKJY6Z0gPEdX3fgFGErQDGb"
           }
         }
-    }
-  },
-  "sapux": [
-    "app/btp-mdqre"
-  ]
-}
+      }
+    },
+    "sapux": [
+      "app/btp-mdqre"
+    ]
+  }
 }

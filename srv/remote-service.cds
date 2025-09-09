@@ -1,6 +1,6 @@
 using {API_BUSINESS_PARTNER as bp} from './external/API_BUSINESS_PARTNER';
 
-service RemoteService {
+service BusinessPartnerService {
 
     @readonly
     entity A_BusinessPartner as

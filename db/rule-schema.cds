@@ -11,8 +11,7 @@ entity Rules : cuid, managed {
     name                       : String(255);
     description                : String(255);
     entity                     : Association to Entities;
-    conditionAndBinaryOperator : Boolean default true;
-    actionAndBinaryOperator    : Boolean default true;
+    andBinaryOperator : Boolean default true;
     priority                   : Priorities              @assert.range: true;
     Conditions                 : Composition of many Conditions
                                      on Conditions.rule = $self;
