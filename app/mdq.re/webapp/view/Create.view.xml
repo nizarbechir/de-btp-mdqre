@@ -106,25 +106,41 @@
                                         value="{/description}"
                                         editable="true"
                                         placeholder="Enter rule description"/>
+
+                                    <m:Label id="createServiceNameLabel" text="Service Name"/>
+                                    <m:Input
+                                        id="createServiceInput"
+                                        value="{/entity_service_name}"
+                                        editable="true"
+                                        placeholder="Enter rule service"/>
                                     
                                     <m:Label id="createTargetEntityFormLabel" text="Target Entity" required="true"/>
                                     <m:Input
                                         id="createTargetEntityInput"
-                                        value="{/targetEntity}"
+                                        value="{/entity_name}"
                                         editable="true"
                                         showValueHelp="true"
                                         valueHelpOnly="true"
                                         valueHelpRequest="handleValueHelp"
                                         placeholder="Select target entity"/>
+
+                                    <m:Label id="createBinaryConditionFormLabel" text="Binary Operator"/>
+                                    <m:Select
+                                        id="createBinaryConditionSelect"
+                                        selectedKey="{/conditionAndBinaryOperator}"
+                                        editable="true">
+                                        <core:Item id="And" key="true" text="And"/>
+                                        <core:Item id="Or" key="false" text="Or"/>
+                                    </m:Select>
                                     
                                     <m:Label id="createPriorityFormLabel" text="Priority"/>
                                     <m:Select
                                         id="createPrioritySelect"
-                                        selectedKey="{/priority_code}"
+                                        selectedKey="{/priority}"
                                         editable="true">
-                                        <core:Item id="createHigh" key="H" text="High"/>
-                                        <core:Item id="createMedium" key="M" text="Medium"/>
-                                        <core:Item id="createLow" key="L" text="Low"/>
+                                        <core:Item id="createHigh" key="High" text="High"/>
+                                        <core:Item id="createMedium" key="Medium" text="Medium"/>
+                                        <core:Item id="createLow" key="Low" text="Low"/>
                                     </m:Select>
                                 </f:content>
                             </f:SimpleForm>
@@ -165,13 +181,10 @@
                                                 <m:Text id="createFieldText" text="Field Name"/>
                                             </m:Column>
                                             <m:Column id="createColumn2">
-                                                <m:Text id="createOperatorText" text="Operator"/>
+                                                <m:Text id="createOperatorText1" text="Operator"/>
                                             </m:Column>
                                             <m:Column id="createColumn3">
                                                 <m:Text id="createValueText" text="Value"/>
-                                            </m:Column>
-                                            <m:Column id="createColumn4">
-                                                <m:Text id="createAndText" text="Logical Operator"/>
                                             </m:Column>
                                         </m:columns>
                                         <m:items>
@@ -179,7 +192,7 @@
                                                 <m:cells>
                                                     <m:Input
                                                         id="createFieldInput"
-                                                        value="{fieldName}"
+                                                        value="{attribute_name}"
                                                         editable="true"
                                                         showValueHelp="true"
                                                         valueHelpOnly="true"
@@ -189,6 +202,81 @@
                                                         id="createOperatorInput"
                                                         selectedKey="{operator}"
                                                         editable="true">
+                                                        <core:Item id="createEqual1" key="=" text="Equals (=)"/>
+                                                        <core:Item id="createGreater1" key=">" text="Greater than (>)"/>
+                                                        <core:Item id="createLess1" key="&lt;" text="Less than (&lt;)"/>
+                                                        <core:Item id="createContains1" key="contains" text="Contains"/>
+                                                        <core:Item id="createStarts1" key="startswith" text="Starts with"/>
+                                                    </m:Select>
+                                                    <m:Input
+                                                        id="createValueInput"
+                                                        value="{value}"
+                                                        editable="true"
+                                                        placeholder="Enter value"/>
+                                                </m:cells>
+                                            </m:ColumnListItem>
+                                        </m:items>
+                                    </m:Table>
+                                </m:content>
+                            </m:Panel>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
+            <uxap:ObjectPageSection
+                id="createActionsSection"
+                title="Actions">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection id="createActionsSubSection">
+                        <uxap:blocks>
+                            <m:Panel id="createActionsPanel">
+                                <m:headerToolbar>
+                                    <m:Toolbar id="createActionsToolbar">
+                                        <m:Title id="createActionsTitle" text="Rule Actions" level="H4"/>
+                                        <m:ToolbarSpacer id="createSpacer11"/>
+                                        <m:Button
+                                            id="createAddActionButton"
+                                            text="Add Action"
+                                            type="Transparent"
+                                            icon="sap-icon://add"
+                                            press="onAddAction"/>
+                                    </m:Toolbar>
+                                </m:headerToolbar>
+                                <m:content>
+                                    <m:Table
+                                        id="createActionsTable"
+                                        items="{
+                                            path: '/actions'
+                                            }"
+                                        mode="Delete"
+                                        delete="onDeleteAction">
+                                        <m:columns>
+                                            <m:Column id="createColumn11">
+                                                <m:Text id="createFieldText1" text="Field Name"/>
+                                            </m:Column>
+                                            <m:Column id="createColumn21">
+                                                <m:Text id="createOperatorText" text="Operator"/>
+                                            </m:Column>
+                                            <m:Column id="createColumn31">
+                                                <m:Text id="createValueText1" text="Value"/>
+                                            </m:Column>
+                                        </m:columns>
+                                        <m:items>
+                                            <m:ColumnListItem id="createItems1">
+                                                <m:cells>
+                                                    <m:Input
+                                                        id="createFieldInput1"
+                                                        value="{attribute_name}"
+                                                        editable="true"
+                                                        showValueHelp="true"
+                                                        valueHelpOnly="true"
+                                                        valueHelpRequest="handleFieldValueHelp"
+                                                        placeholder="Select field"/>
+                                                    <m:Select
+                                                        id="createOperatorInput1"
+                                                        selectedKey="{operator}"
+                                                        editable="true">
                                                         <core:Item id="createEqual" key="=" text="Equals (=)"/>
                                                         <core:Item id="createGreater" key=">" text="Greater than (>)"/>
                                                         <core:Item id="createLess" key="&lt;" text="Less than (&lt;)"/>
@@ -196,17 +284,10 @@
                                                         <core:Item id="createStarts" key="startswith" text="Starts with"/>
                                                     </m:Select>
                                                     <m:Input
-                                                        id="createValueInput"
+                                                        id="createValueInput1"
                                                         value="{value}"
                                                         editable="true"
                                                         placeholder="Enter value"/>
-                                                    <m:Select
-                                                        id="createAndInput"
-                                                        selectedKey="{binaryAnd}"
-                                                        editable="true">
-                                                        <core:Item id="createAnd" key="Yes" text="AND"/>
-                                                        <core:Item id="createOr" key="No" text="OR"/>
-                                                    </m:Select>
                                                 </m:cells>
                                             </m:ColumnListItem>
                                         </m:items>

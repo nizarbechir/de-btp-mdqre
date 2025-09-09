@@ -1,4 +1,0 @@
-ID,rule_ID,fieldName,operator,value,binaryAnd
-1,6fa82608-f633-454a-9bce-37889e556dcc,BusinessPartnerFullName,=,John Doe,true
-2,8f4d3132-d404-41d4-8198-e77079081186,BusinessPartnerFullName,contains,Corp,false
-3,8f4d3132-d404-41d4-8198-e77079081186,NameCountry,=,US,true

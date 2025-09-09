@@ -1,3 +1,0 @@
-ID,name,description,targetEntity,priority_code,results
-6fa82608-f633-454a-9bce-37889e556dcc,Test Rule 1,Check BP name equals John,A_BusinessPartner,H,
-8f4d3132-d404-41d4-8198-e77079081186,Test Rule 2,Check BP name and country,A_BusinessPartner,M,

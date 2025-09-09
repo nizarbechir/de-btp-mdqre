@@ -25,9 +25,13 @@ sap.ui.define(
         var oViewModel = new JSONModel({
           name: "",
           description: "",
-          targetEntity: "",
-          priority_code: "M",
+          entity_service_name: "",
+          entity_name: "",
+          conditionAndBinaryOperator: true,
+          actionAndBinaryOperator: true,
+          priority: "Medium",
           conditions: [],
+          actions: [],
         });
         this.getView().setModel(oViewModel);
 
@@ -44,8 +48,9 @@ sap.ui.define(
       onCreate: function () {
         var oODataModel = this.getView().getModel("odata");
         var oViewModel = this.getView().getModel();
-        console.log("data: ", oODataModel);
-        console.log("view: ", oViewModel);
+        console.log("data: ", oODataModel); 
+        //console.log("view: ", oViewModel); 
+        console.log("ViewModel data: ", oViewModel.getData());
 
         // Validate required fields
         if (!this._validateRequiredFields()) {
@@ -55,47 +60,50 @@ sap.ui.define(
 
         var oData = oViewModel.getData();
 
-        // Prepare the data for creation
+        // Map Conditions + Actions to match backend expectations
         var oCreateData = {
           name: oData.name,
           description: oData.description,
-          targetEntity: oData.targetEntity,
-          priority_code: oData.priority_code,
-          conditions: oData.conditions.map(function (condition) {
+          entity_name: oData.entity_name,
+          entity_service_name: oData.entity_service_name,
+          conditionAndBinaryOperator: oData.conditionAndBinaryOperator === "true",
+          actionAndBinaryOperator: oData.actionAndBinaryOperator === "true",
+          priority: oData.priority || oData.priority_code, // normalize priority
+
+          // Capitalized keys to match OData
+          Conditions: (oData.conditions || []).map(function (condition) {
             return {
-              fieldName: condition.fieldName,
+              attribute_name: condition.attribute_name,
               operator: condition.operator,
-              value: condition.value,
-              binaryAnd: condition.binaryAnd === "Yes",
+              value: condition.value
+            };
+          }),
+          Actions: (oData.actions || []).map(function (action) {
+            return {
+              attribute_name: action.attribute_name,
+              operator: action.operator,
+              value: action.value
             };
           }),
         };
 
-        // Create through binding list
+        // Create entity in OData V4 model
         var oBinding = oODataModel.bindList("/Rules");
         var oContext = oBinding.create(oCreateData);
-        //console.log("binding: ", oBinding)
-        //console.log("context: ", oContext)
 
-        // Handle the creation promise
-        oContext
-          .created()
-          .then(
-            function () {
-              MessageToast.show("Rule created successfully");
-              // If no ID is available, just navigate back or refresh
-              this._resetForm();
-              this._navigateBack();
-            }.bind(this)
-          )
+        // Handle creation
+        oContext.created()
+          .then(function () {
+            MessageToast.show("Rule created successfully");
+            this._resetForm();
+            this._navigateBack();
+          }.bind(this))
           .catch(function (oError) {
-            MessageBox.error(
-              "Error creating rule: " + (oError.message || "Unknown error")
-            );
+            MessageBox.error("Error creating rule: " + (oError.message || "Unknown error"));
             console.error("Creation error:", oError);
           });
-        //console.log("created")
       },
+
 
       _validateRequiredFields: function () {
         var oData = this.getView().getModel().getData();
@@ -110,7 +118,7 @@ sap.ui.define(
           for (var i = 0; i < oData.conditions.length; i++) {
             var oCondition = oData.conditions[i];
             if (
-              !oCondition.fieldName ||
+              !oCondition.attribute_name ||
               !oCondition.operator ||
               !oCondition.value
             ) {
@@ -133,8 +141,7 @@ sap.ui.define(
         if (
           oData.name ||
           oData.description ||
-          oData.targetEntity ||
-          (oData.conditions && oData.conditions.length > 0)
+          oData.entity_name
         ) {
           MessageBox.confirm(
             "You have unsaved changes. Do you want to leave without saving?",
@@ -161,10 +168,9 @@ sap.ui.define(
 
         // Add new empty condition
         aConditions.push({
-          fieldName: "",
+          attribute_name: "",
           operator: "=",
           value: "",
-          binaryAnd: "Yes",
         });
 
         oModel.setProperty("/conditions", aConditions);
@@ -186,6 +192,39 @@ sap.ui.define(
         aConditions.splice(parseInt(iIndex), 1);
         oModel.setProperty("/conditions", aConditions);
         MessageToast.show("Condition deleted");
+      },
+
+
+      onAddAction: function () {
+        var oModel = this.getView().getModel();
+        var aActions = oModel.getProperty("/actions") || [];
+
+        // Add new empty condition
+        aActions.push({
+          attribute_name: "",
+          operator: "=",
+          value: "",
+        });
+
+        oModel.setProperty("/actions", aActions);
+        MessageToast.show("New action added");
+      },
+
+      /**
+       * Deletes a actions from the table
+       */
+      onDeleteAction: function (oEvent) {
+        var oModel = this.getView().getModel();
+        var aActions = oModel.getProperty("/actions");
+        var oBindingContext = oEvent
+          .getParameter("listItem")
+          .getBindingContext();
+        var iIndex = oBindingContext.getPath().split("/").pop();
+
+        // Remove the condition
+        aActions.splice(parseInt(iIndex), 1);
+        oModel.setProperty("/actions", aActions);
+        MessageToast.show("Action deleted");
       },
 
       /**

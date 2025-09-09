@@ -1,0 +1,32 @@
+
+
+@baseUrl = http://localhost:4004
+
+
+### test with one condition
+POST {{baseUrl}}/rule/Rules
+Content-Type: application/json
+
+{
+  "name": "Test Rule 2",
+  "description": "Check BP name equals Energy Corp",
+  "entity_name": "A_BusinessPartner"
+}
+
+### test with one condition
+POST {{baseUrl}}/rule/Rules
+Content-Type: application/json
+
+{
+  "name": "Test Rule 3",
+  "description": "Check BP name equals Energy Corp",
+  "entity_service_name": "BusinessPartner",
+  "entity_name": "A_BusinessPartner",
+  "Conditions": [
+    {
+      "attribute_name": "BusinessPartnerFullName",
+      "operator": ">",
+      "value": "Corp"
+    }
+  ]
+}

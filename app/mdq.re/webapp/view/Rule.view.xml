@@ -34,28 +34,31 @@
                         id="editButton"
                         text="Edit"
                         type="Emphasized"
-                        press="onEdit"/>
+                        press="onEdit"
+                        visible="{= !${viewState>/editMode} }"/>
                     <m:Button
                         id="saveButton"
                         text="Save"
                         type="Emphasized"
                         press="onSave"
-                        visible="false"/>
+                        visible="{viewState>/editMode}"/>
                     <m:Button
                         id="cancelButton"
                         text="Cancel"
                         press="onCancel"
-                        visible="false"/>
+                        visible="{viewState>/editMode}"/>
                     <m:Button
                         id="deleteButton"
                         text="Delete"
                         type="Transparent"
-                        press="onDelete"/>
+                        press="onDelete"
+                        visible="{= !${viewState>/editMode} }"/>
                     <m:Button
                         id="closeButton"
                         icon="sap-icon://decline" 
                         type="Transparent"
-                        press="onNavBack"/>
+                        press="onNavBack"
+                        visible="{= !${viewState>/editMode} }"/>
                 </uxap:actions>
             </uxap:ObjectPageDynamicHeaderTitle>
         </uxap:headerTitle>
@@ -74,7 +77,7 @@
             </m:FlexBox>
             <m:FlexBox id="flexbox3" direction="Column" class="sapUiMediumMargin">
                 <m:Label id="priorityLabel" text="Priority:" class="sapUiTinyMarginBottom"/>
-                <m:Text id="priorityText" text="{priority/code}"/>
+                <m:Text id="priorityText" text="{priority}"/>
             </m:FlexBox>
             <m:FlexBox id="flexbox4" direction="Column" class="sapUiMediumMargin">
                 <m:Label id="createdAtLabel" text="Created:" class="sapUiTinyMarginBottom"/>
@@ -115,32 +118,48 @@
                                     <m:Input
                                         id="nameInput"
                                         value="{name}"
-                                        editable="false"/>
+                                        editable="{viewState>/editMode}"/>
                                     
                                     <m:Label id="descriptionLabel" text="Description"/>
                                     <m:Input
                                         id="descriptionInput"
                                         value="{description}"
-                                        editable="false"/>
+                                        editable="{viewState>/editMode}"/>
+
+                                    <m:Label id="serviceLabel" text="Service Name"/>
+                                    <m:Input
+                                        id="serviceInput"
+                                        value="{entity_service_name}"
+                                        editable="{viewState>/editMode}"/>
                                     
                                     <m:Label id="targetEntityFormLabel" text="Target Entity" required="true"/>
                                     <m:Input
                                         id="targetEntityInput"
-                                        value="{targetEntity}"
-                                        editable="false"
+                                        value="{entity_name}"
+                                        editable="{viewState>/editMode}"
                                         showValueHelp="true"
                                         valueHelpOnly="true"
                                         valueHelpRequest="handleValueHelp"/>
+
+                                    <m:Label id="binaryOperatorLabel" text="Binary Operator"/>
+                                    <m:Select
+                                        id="binaryConditionSelect"
+                                        selectedKey="{/conditionAndBinaryOperator}"
+                                        editable="{viewState>/editMode}">
+                                        <core:Item id="and" key="true" text="And"/>
+                                        <core:Item id="or" key="false" text="Or"/>
+                                    </m:Select>
                                     
                                     <m:Label id="priorityFormLabel" text="Priority"/>
                                     <m:Select
                                         id="prioritySelect"
-                                        selectedKey="{priority_code}"   
-                                        editable="false">
-                                        <core:Item id="high" key="H" text="High"/>
-                                        <core:Item id="medium" key="M" text="Medium"/>
-                                        <core:Item id="low" key="L" text="Low"/>
+                                        selectedKey="{priority}"   
+                                        editable="{viewState>/editMode}">
+                                        <core:Item id="high" key="High" text="High"/>
+                                        <core:Item id="medium" key="Medium" text="Medium"/>
+                                        <core:Item id="low" key="Low" text="Low"/>
                                     </m:Select>
+
                                 </f:content>
                             </f:SimpleForm>
                         </uxap:blocks>
@@ -158,36 +177,33 @@
                                 <m:headerToolbar>
                                     <m:Toolbar id="conditionsToolbar">
                                         <m:Title id="conditionsTitle" text="Rule Conditions" level="H4"/>
-                                        <m:ToolbarSpacer id="spacer1"/>
+                                        <m:ToolbarSpacer id="spacer2"/>
                                         <m:Button
                                             id="addConditionButton"
                                             text="Add Condition"
                                             type="Transparent"
                                             icon="sap-icon://add"
                                             press="onAddCondition"
-                                            visible="false"/>
+                                            visible="{viewState>/editMode}"/>
                                     </m:Toolbar>
                                 </m:headerToolbar>
                                 <m:content>
                                     <m:Table
                                         id="conditionsTable"
                                         items="{
-                                            path: 'conditions'
+                                            path: 'Conditions'
                                             }"
                                         mode="None"
                                         delete="onDeleteCondition">
                                         <m:columns>
-                                            <m:Column id="column1">
+                                            <m:Column id="column1" width="50%">
                                                 <m:Text id="fieldText" text="Field Name"/>
                                             </m:Column>
                                             <m:Column id="column2">
                                                 <m:Text id="operatorText" text="Operator"/>
                                             </m:Column>
-                                            <m:Column id="column3">
+                                            <m:Column id="column3" width="25%">
                                                 <m:Text id="valueText" text="Value"/>
-                                            </m:Column>
-                                            <m:Column id="column4">
-                                                <m:Text id="andText" text="Logical Operator"/>
                                             </m:Column>
                                         </m:columns>
                                         <m:items>
@@ -195,15 +211,15 @@
                                                 <m:cells>
                                                     <m:Input
                                                         id="fieldInput"
-                                                        value="{fieldName}"
-                                                        editable="false"
+                                                        value="{attribute_name}"
+                                                        editable="{viewState>/editMode}"
                                                         showValueHelp="true"
                                                         valueHelpOnly="true"
                                                         valueHelpRequest="handleFieldValueHelp"/>
                                                     <m:Select
                                                         id="operatorInput"
                                                         selectedKey="{operator}"
-                                                        editable="false">
+                                                        editable="{viewState>/editMode}">
                                                         <core:Item id="equal" key="=" text="Equals (=)"/>
                                                         <core:Item id="greater" key=">" text="Greater than (>)"/>
                                                         <core:Item id="less" key="&lt;" text="Less than (&lt;)"/>
@@ -213,14 +229,7 @@
                                                     <m:Input
                                                         id="valueInput"
                                                         value="{value}"
-                                                        editable="false"/>
-                                                    <m:Select
-                                                        id="andInput"
-                                                        selectedKey="{binaryAnd}"
-                                                        editable="false">
-                                                        <core:Item id="and" key="Yes" text="AND"/>
-                                                        <core:Item id="or" key="No" text="OR"/>
-                                                    </m:Select>
+                                                        editable="{viewState>/editMode}"/>
                                                 </m:cells>
                                             </m:ColumnListItem>
                                         </m:items>
@@ -231,31 +240,81 @@
                     </uxap:ObjectPageSubSection>
                 </uxap:subSections>
             </uxap:ObjectPageSection>
-            
-            <!-- Results Section -->
+
             <uxap:ObjectPageSection
-                id="resultsSection"
-                title="Results">
+                id="actionsSection"
+                title="Actions">
                 <uxap:subSections>
-                    <uxap:ObjectPageSubSection id="resultsSubSection">
+                    <uxap:ObjectPageSubSection id="actionsSubSection">
                         <uxap:blocks>
-                            <m:Panel id="resultsPanel">
+                            <m:Panel id="actionsPanel">
                                 <m:headerToolbar>
-                                    <m:Toolbar id="resultsToolbar">
-                                        <m:Title id="resultsTitle" text="Rule Results" level="H4"/>
+                                    <m:Toolbar id="actionsToolbar">
+                                        <m:Title id="actionsTitle" text="Rule Actions" level="H4"/>
+                                        <m:ToolbarSpacer id="spacer1"/>
+                                        <m:Button
+                                            id="addActionButton"
+                                            text="Add Action"
+                                            type="Transparent"
+                                            icon="sap-icon://add"
+                                            press="onAddCondition"
+                                            visible="{viewState>/editMode}"/>
                                     </m:Toolbar>
                                 </m:headerToolbar>
                                 <m:content>
-                                    <m:FormattedText
-                                        id="resultsText"
-                                        htmlText="{results}"
-                                        class="sapUiMediumMargin"/>
+                                    <m:Table
+                                        id="actionsTable"
+                                        items="{
+                                            path: 'Actions'
+                                            }"
+                                        mode="None"
+                                        delete="onDeleteAction">
+                                        <m:columns>
+                                            <m:Column id="column11" width="50%">
+                                                <m:Text id="fieldText1" text="Field Name"/>
+                                            </m:Column>
+                                            <m:Column id="column22">
+                                                <m:Text id="operatorText1" text="Operator"/>
+                                            </m:Column>
+                                            <m:Column id="column33">
+                                                <m:Text id="valueText1" text="Value"/>
+                                            </m:Column>
+                                        </m:columns>
+                                        <m:items>
+                                            <m:ColumnListItem id="items1">
+                                                <m:cells>
+                                                    <m:Input
+                                                        id="fieldInput1"
+                                                        value="{attribute_name}"
+                                                        editable="{viewState>/editMode}"
+                                                        showValueHelp="true"
+                                                        valueHelpOnly="true"
+                                                        valueHelpRequest="handleFieldValueHelp"/>
+                                                    <m:Select
+                                                        id="operatorInput1"
+                                                        selectedKey="{operator}"
+                                                        editable="{viewState>/editMode}">
+                                                        <core:Item id="equal1" key="=" text="Equals (=)"/>
+                                                        <core:Item id="greater1" key=">" text="Greater than (>)"/>
+                                                        <core:Item id="less1" key="&lt;" text="Less than (&lt;)"/>
+                                                        <core:Item id="contains1" key="contains" text="Contains"/>
+                                                        <core:Item id="starts1" key="startswith" text="Starts with"/>
+                                                    </m:Select>
+                                                    <m:Input
+                                                        id="valueInput1"
+                                                        value="{value}"
+                                                        editable="{viewState>/editMode}"/>
+                                                </m:cells>
+                                            </m:ColumnListItem>
+                                        </m:items>
+                                    </m:Table>
                                 </m:content>
                             </m:Panel>
                         </uxap:blocks>
                     </uxap:ObjectPageSubSection>
                 </uxap:subSections>
             </uxap:ObjectPageSection>
+
             
         </uxap:sections>
         
