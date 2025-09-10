@@ -101,11 +101,6 @@ sap.ui.define(
         var oContext = this.getView().getBindingContext();
         var oViewModel = this.getView().getModel("viewState");
 
-        // Create a draft
-        oContext.getModel().getDependentBindings(oContext).forEach(function (oBinding) {
-          oBinding.hasPendingChanges() && oBinding.resetChanges();
-        });
-
         oViewModel.setProperty("/editMode", true);
       },
 
