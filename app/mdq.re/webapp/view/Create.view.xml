@@ -130,8 +130,8 @@
                                         id="createBinaryConditionSelect"
                                         selectedKey="{/andBinaryOperator}"
                                         editable="true">
-                                        <core:Item id="And" key="true" text="And"/>
-                                        <core:Item id="Or" key="false" text="Or"/>
+                                        <core:Item id="And" key="And" text="And"/>
+                                        <core:Item id="Or" key="Or" text="Or"/>
                                     </m:Select>
                                     
                                     <m:Label id="createPriorityFormLabel" text="Priority"/>

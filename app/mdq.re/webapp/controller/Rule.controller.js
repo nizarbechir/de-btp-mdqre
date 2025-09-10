@@ -13,9 +13,6 @@ sap.ui.define(
     MessageToast,
     MessageBox,
     Fragment,
-    Filter,
-    FilterOperator,
-    ODataModel
   ) {
     "use strict";
 
@@ -40,25 +37,29 @@ sap.ui.define(
         console.log("this is the oModel: ", oModel);
 
         var sPath = "/Rules(" + sRuleId + ")";
-        var oContextBinding = oModel.bindContext(sPath, null, {
-          $expand: "Conditions,Actions,violation",
-          $select: "*",
+        this.getView().bindElement({
+          path: sPath,
+          model: undefined,
+          parameters: {
+            $expand: "Conditions,Actions,violation",
+            $select: "*"
+          },
+          events: {
+            dataReceived: function (oEvent) {
+              console.log('Rule data loaded')
+            }.bind(this),
+            dataRequested: function (oEvent) {
+              console.log('Loading rule data...')
+            }.bind(this),
+            change: function (oEvent) {
+              var oBindingContext = oEvent.getSource()
+              if (oBindingContext && oBindingContext.getBoundContext()) {
+                console.log('Binding context changed')
+              }
+            }.bind(this)
+          }
         });
 
-        oContextBinding
-          .requestObject()
-          .then(
-            function (oData) {
-              console.log("Rule object loaded:", oData);
-              // Optionally bind the view to this context
-              this.getView().setBindingContext(
-                oContextBinding.getBoundContext()
-              );
-            }.bind(this)
-          )
-          .catch(function (err) {
-            console.error("Error loading rule:", err);
-          });
       },
 
       onDelete: function () {
@@ -98,53 +99,46 @@ sap.ui.define(
       },
 
       onEdit: function () {
-        var oContext = this.getView().getBindingContext();
         var oViewModel = this.getView().getModel("viewState");
-
         oViewModel.setProperty("/editMode", true);
       },
 
       onCancel: function () {
-        var oContext = this.getView().getBindingContext();
-        var oModel = oContext.getModel();
+        var oModel = this.getView().getModel();
         var oViewModel = this.getView().getModel("viewState");
 
-        // Reset changes for specific group instead of all changes
-        try {
-          // If you're using a specific group, reset only that group
-          oModel.resetChanges("updateGroup");
-        } catch (error) {
-          // Fallback to resetting dependent bindings individually
-          oModel.getDependentBindings(oContext).forEach(function (oBinding) {
-            if (oBinding.hasPendingChanges()) {
-              try {
-                oBinding.resetChanges();
-              } catch (e) {
-                console.warn("Could not reset binding:", e);
+        MessageBox.confirm("Discard changes?", {
+          onClose: function (sAction) {
+            if (sAction === MessageBox.Action.OK) {
+              if (oModel.hasPendingChanges("updateGroup")) {
+                oModel.resetChanges("updateGroup");
               }
-            }
-          });
-        }
 
-        oViewModel.setProperty("/editMode", false);
-        sap.m.MessageToast.show("Changes cancelled");
+              oViewModel.setProperty("/editMode", false);
+              sap.m.MessageToast.show("Changes cancelled");
+            }
+          }.bind(this)
+        });
       },
 
       onSave: function () {
-        var oContext = this.getView().getBindingContext();
-        var oModel = oContext.getModel();
+        var oModel = this.getView().getModel();
         var oViewModel = this.getView().getModel("viewState");
+        console.log(oModel)
 
         if (oModel.hasPendingChanges()) {
-          oModel.submitBatch("updateGroup")
-            .then(() => {
+          oModel
+            .submitBatch("updateGroup")
+            .then(function () {
               sap.m.MessageToast.show("Changes saved");
               oViewModel.setProperty("/editMode", false);
-            })
-            .catch((err) => {
+            }.bind(this))
+            .catch(function (err) {
               sap.m.MessageBox.error("Save failed: " + err.message);
-            });
+            }.bind(this)
+            );
         } else {
+          sap.m.MessageToast.show("No changes");
           oViewModel.setProperty("/editMode", false);
         }
       },

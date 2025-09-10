@@ -59,14 +59,13 @@ sap.ui.define(
 
         var oData = oViewModel.getData();
 
-        // Map Conditions + Actions to match backend expectations
         var oCreateData = {
           name: oData.name,
           description: oData.description,
           entity_name: oData.entity_name,
           entity_service_name: oData.entity_service_name,
-          andBinaryOperator: oData.andBinaryOperator === 'true',
-          priority: oData.priority || oData.priority_code, // normalize priority
+          andBinaryOperator: oData.andBinaryOperator === 'And' ? true : false,
+          priority: oData.priority,
 
           // Capitalized keys to match OData
           Conditions: (oData.conditions || []).map(function (condition) {
