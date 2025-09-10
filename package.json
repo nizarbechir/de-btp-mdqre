@@ -44,6 +44,16 @@
             "APIkey": "uGDALeEHcgKJY6Z0gPEdX3fgFGErQDGb"
           }
         }
+      },
+      "API_SALES_ORDER_SRV": {
+        "kind": "odata-v2",
+        "model": "srv/external/API_SALES_ORDER_SRV",
+        "credentials": {
+          "url": "https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata/sap/API_SALES_ORDER_SRV",
+          "headers": {
+            "APIkey": "uGDALeEHcgKJY6Z0gPEdX3fgFGErQDGb"
+          }
+        }
       }
     },
     "sapux": [

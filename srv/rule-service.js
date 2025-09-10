@@ -22,48 +22,39 @@ class RuleService extends cds.ApplicationService {
     const { ruleID } = req.data;
     const { Rules, Actions, Violations, Elements } = this.entities;
     await DELETE.from(Violations);
-
     const rule = await SELECT.one.from(Rules).where({ ID: ruleID });
     if (rule == undefined) {
       return req.error(`Rule_Not_Found`);
     }
-
     const queries = await SELECT.from(Actions).where({ rule_ID: rule.ID });
+
     const subSet = await this.generateSubSet(rule, Elements);
-
-    const violationRecordIds = new Set();
-
-    for (const query of queries) {
-      const records = subSet.map((rec) => rec.record_ID);
-      const whereCondition = await this.generateSelectQuery(
-        query.value,
-        query.operator,
+    let violations = [];
+    for (const querie of queries) {
+      let records = subSet.map((rec) => rec.record_ID);
+      const whereCondition = this.generateSelectQuery(
+        querie.value,
+        querie.operator,
         false
       );
-
       const elements = await SELECT.from(Elements).where({
         record_ID: { in: records },
-        attribute_name: query.attribute_name,
+        attribute_name: querie.attribute_name,
         ...whereCondition,
       }).columns`record_ID`;
-
-      for (const element of elements) {
-        violationRecordIds.add(element.record_ID);
+      for (const e of elements) {
+        if (!violations.includes(e)) {
+          await INSERT.into(Violations).entries({
+            rule_ID: ruleID,
+            record_ID: e.record_ID,
+          });
+          violations.push(e);
+        }
       }
     }
-    if (violationRecordIds.size > 0) {
-      const violationEntries = Array.from(violationRecordIds).map(
-        (recordId) => ({
-          rule_ID: ruleID,
-          record_ID: recordId,
-        })
-      );
-
-      await INSERT.into(Violations).entries(violationEntries);
-    }
-
     return SELECT.from(Violations);
   }
+
   async isNumericAttribute(
     attribute_name,
     attribute_entity_name,
@@ -75,14 +66,16 @@ class RuleService extends cds.ApplicationService {
       attribute_entity_name,
       attribute_entity_service_name
     );
-    const result = await SELECT.one.from(Attributes).where({
+    const { type: AttributeType } = await SELECT.one.from(Attributes).where({
       name: attribute_name,
       entity_name: attribute_entity_name,
       entity_service_name: attribute_entity_service_name,
     }).columns`type`;
+    if (!AttributeType) {
+      return false;
+    }
 
-    console.log("Query result:", result);
-    return result?.type === "number";
+    return AttributeType === "number";
   }
 
   async generateSubSet(rule, Elements) {
@@ -141,11 +134,12 @@ class RuleService extends cds.ApplicationService {
       }
     } else {
       for (const querie of conditions) {
-        const isNumeric = this.isNumericAttribute(
+        const isNumeric = await this.isNumericAttribute(
           querie.attribute_name,
           querie.attribute_entity_name,
           querie.attribute_entity_service_name
         );
+        console.log(isNumeric);
         const whereCondition = this.generateSelectQuery(
           querie.value,
           querie.operator,
@@ -358,35 +352,29 @@ class RuleService extends cds.ApplicationService {
       operator,
       rule_ID,
     } = req.data;
-
     const entityName = req.target.name.split(".").pop();
     const { Attributes, Rules, Actions, Conditions } = this.entities;
     const ID = req.params[0];
+    console.log(operator);
     const querie = entityName === "Conditions" ? Conditions : Actions;
-
     if (req.event === "UPDATE" && ID) {
       try {
         const existingQuerie = await this.read(querie, ID);
         if (!existingQuerie) {
           return req.error(`INEXISTING_ELEMENT_TO_UPDATE`);
         }
-
-        // Fill in missing values with existing ones
         if (value === undefined || value === null) {
           req.data.value = existingQuerie.value;
         }
         if (operator === undefined || operator === null) {
           req.data.operator = existingQuerie.operator;
         }
-        // FIXED: Check rule_ID instead of operator
-        if (rule_ID === undefined || rule_ID === null) {
+        if (rule_ID == undefined || rule_ID === null) {
           req.data.rule_ID = existingQuerie.rule_ID;
         }
-
         const rule = await SELECT.one
           .from(Rules)
           .where({ ID: req.data.rule_ID });
-
         if (
           attribute_entity_service_name === undefined ||
           attribute_entity_service_name === null
@@ -409,10 +397,9 @@ class RuleService extends cds.ApplicationService {
         if (req.data.attribute_entity_name !== rule.entity_name) {
           return req.error(`Missmatching_data`);
         }
-        if (attribute_name === undefined || attribute_name === null) {
+        if (attribute_name == undefined || attribute_name === null) {
           req.data.attribute_name = existingQuerie.attribute_name;
         }
-
         const attribute = await SELECT.one.from(Attributes).where({
           name: req.data.attribute_name,
           entity_name: req.data.attribute_entity_name,
@@ -423,27 +410,11 @@ class RuleService extends cds.ApplicationService {
         }
       } catch (err) {
         console.log(err);
-        return req.error("UPDATE_FAILED", [err.message]);
       }
     } else if (req.event === "CREATE") {
-      console.log("cc");
-
       const rule = await SELECT.one.from(Rules).where({
         ID: rule_ID,
       });
-
-      if (!rule) {
-        return req.error("Rule_Not_Found", [
-          `Rule with ID '${rule_ID}' not found`,
-        ]);
-      }
-
-      console.log("Rule found:", {
-        entity_name: rule.entity_name,
-        entity_service_name: rule.entity_service_name,
-      });
-
-      // Set entity names from rule if not provided
       if (
         attribute_entity_name === null ||
         attribute_entity_name === undefined
@@ -463,27 +434,19 @@ class RuleService extends cds.ApplicationService {
       } else if (attribute_entity_service_name !== rule.entity_service_name) {
         return req.error(`Invalid_Inserted_Data`);
       }
-
-      console.log("Updated req.data after setting entity names:", {
-        attribute_entity_name: req.data.attribute_entity_name,
-        attribute_entity_service_name: req.data.attribute_entity_service_name,
-      });
-
-      // Use the updated values for attribute lookup
       const attributeResult = await SELECT.one.from(Attributes).where({
         name: attribute_name,
-        entity_name: req.data.attribute_entity_name, // Use req.data values
-        entity_service_name: req.data.attribute_entity_service_name, // Use req.data values
+        entity_name: attribute_entity_name,
+        entity_service_name: attribute_entity_service_name,
       }).columns`type`;
 
       if (!attributeResult) {
         return req.error("Attribute_Not_Found", [
-          `Attribute '${attribute_name}' not found in entity '${req.data.attribute_entity_name}' of service '${req.data.attribute_entity_service_name}'`,
+          `Attribute '${attribute_name}' not found in entity '${attribute_entity_name}' of service '${attribute_entity_service_name}'`,
         ]);
       }
 
       const AttributeType = attributeResult.type;
-      console.log("Attribute type found:", AttributeType);
 
       try {
         const checked = this.checkthOperation(AttributeType, operator);
@@ -496,23 +459,15 @@ class RuleService extends cds.ApplicationService {
         return req.error("Operation_Check_Failed", [error.message]);
       }
 
-      // Convert and assign the value
       let queryValue;
       try {
         queryValue = convertor(value, AttributeType);
-        // CRITICAL FIX: Actually use the converted value
-        req.data.value = queryValue;
-        console.log("Converted value:", {
-          original: value,
-          converted: queryValue,
-        });
       } catch (error) {
         return req.error(error.message, [value, AttributeType]);
       }
-
-      console.log("Final req.data:", JSON.stringify(req.data, null, 2));
     }
   }
+
   /**
    * Checks if an operation can be performed on a given attribute type
    * @param {string} attributeType - The attribute type (string, number, boolean, etc.)

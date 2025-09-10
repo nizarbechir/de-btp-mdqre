@@ -28,7 +28,7 @@ sap.ui.define(
 
         var oViewModel = new sap.ui.model.json.JSONModel({
           editMode: false,
-          originalData: {}
+          originalData: {},
         });
         this.getView().setModel(oViewModel, "viewState");
       },
@@ -87,7 +87,7 @@ sap.ui.define(
                     function (oError) {
                       MessageBox.error(
                         "Error deleting rule: " +
-                        (oError.message || "Unknown error")
+                          (oError.message || "Unknown error")
                       );
                     }.bind(this)
                   );
@@ -100,7 +100,7 @@ sap.ui.define(
       onEdit: function () {
         var oContext = this.getView().getBindingContext();
         var oData = Object.assign({}, oContext.getObject());
-        console.log("data: ", oData)
+        console.log("data: ", oData);
 
         var oViewModel = this.getView().getModel("viewState");
         oViewModel.setProperty("/originalData", oData);
@@ -122,12 +122,15 @@ sap.ui.define(
             }
           });
 
-          oModel.submitBatch("updateGroup").then(() => {
-            sap.m.MessageToast.show("Changes reverted");
-            oViewModel.setProperty("/editMode", false);
-          }).catch(err => {
-            sap.m.MessageBox.error("Cancel failed: " + err.message);
-          });
+          oModel
+            .submitBatch("updateGroup")
+            .then(() => {
+              sap.m.MessageToast.show("Changes reverted");
+              oViewModel.setProperty("/editMode", false);
+            })
+            .catch((err) => {
+              sap.m.MessageBox.error("Cancel failed: " + err.message);
+            });
         } else {
           oViewModel.setProperty("/editMode", false);
         }
@@ -138,12 +141,15 @@ sap.ui.define(
         var oViewModel = this.getView().getModel("viewState");
 
         if (oModel.hasPendingChanges()) {
-          oModel.submitBatch("updateGroup").then(() => {
-            sap.m.MessageToast.show("Changes saved");
-            oViewModel.setProperty("/editMode", false);
-          }).catch(err => {
-            sap.m.MessageBox.error("Save failed: " + err.message);
-          });
+          oModel
+            .submitBatch("updateGroup")
+            .then(() => {
+              sap.m.MessageToast.show("Changes saved");
+              oViewModel.setProperty("/editMode", false);
+            })
+            .catch((err) => {
+              sap.m.MessageBox.error("Save failed: " + err.message);
+            });
         } else {
           oViewModel.setProperty("/editMode", false);
         }
@@ -161,12 +167,15 @@ sap.ui.define(
         var oContext = oListBinding.create({
           attribute_name: "",
           operator: "=",
-          value: ""
+          value: "",
         });
 
-        oContext.created()
+        oContext
+          .created()
           .then(() => sap.m.MessageToast.show("Empty condition added."))
-          .catch(err => sap.m.MessageBox.error("Error adding condition: " + err.message));
+          .catch((err) =>
+            sap.m.MessageBox.error("Error adding condition: " + err.message)
+          );
       },
 
       onDeleteCondition: function (oEvent) {
@@ -177,17 +186,28 @@ sap.ui.define(
           return;
         }
 
-        sap.m.MessageBox.confirm("Are you sure you want to delete this condition?", {
-          title: "Confirm Delete",
-          actions: [sap.m.MessageBox.Action.OK, sap.m.MessageBox.Action.CANCEL],
-          onClose: function (sAction) {
-            if (sAction === sap.m.MessageBox.Action.OK) {
-              oContext.delete()
-                .then(() => sap.m.MessageToast.show("Condition deleted"))
-                .catch(err => sap.m.MessageBox.error("Error deleting condition: " + err.message));
-            }
+        sap.m.MessageBox.confirm(
+          "Are you sure you want to delete this condition?",
+          {
+            title: "Confirm Delete",
+            actions: [
+              sap.m.MessageBox.Action.OK,
+              sap.m.MessageBox.Action.CANCEL,
+            ],
+            onClose: function (sAction) {
+              if (sAction === sap.m.MessageBox.Action.OK) {
+                oContext
+                  .delete()
+                  .then(() => sap.m.MessageToast.show("Condition deleted"))
+                  .catch((err) =>
+                    sap.m.MessageBox.error(
+                      "Error deleting condition: " + err.message
+                    )
+                  );
+              }
+            },
           }
-        });
+        );
       },
 
       _navToList: function () {
@@ -367,7 +387,6 @@ sap.ui.define(
         var oBinding = oEvent.getSource().getBinding("items");
         oBinding.filter([oFilter]);
       },
-
     });
   }
 );

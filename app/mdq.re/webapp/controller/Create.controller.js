@@ -198,7 +198,7 @@ sap.ui.define(
 
       onAddAction: function () {
         var oModel = this.getView().getModel();
-        var aActions = oModel.getProperty("/Actions") || [];
+        var aActions = oModel.getProperty("/actions") || [];
 
         // Add new empty condition
         aActions.push({

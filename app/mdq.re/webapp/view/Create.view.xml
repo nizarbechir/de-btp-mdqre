@@ -206,7 +206,7 @@
                                                         <core:Item id="createGreater1" key=">" text="Greater than (>)"/>
                                                         <core:Item id="createLess1" key="&lt;" text="Less than (&lt;)"/>
                                                         <core:Item id="createContains1" key="contains" text="Contains"/>
-                                                        <core:Item id="createStarts1" key="startswith" text="Starts with"/>
+                                                        <core:Item id="createStarts1" key="STARTS WITH" text="Starts with"/>
                                                     </m:Select>
                                                     <m:Input
                                                         id="createValueInput"
@@ -281,7 +281,7 @@
                                                         <core:Item id="createGreater" key=">" text="Greater than (>)"/>
                                                         <core:Item id="createLess" key="&lt;" text="Less than (&lt;)"/>
                                                         <core:Item id="createContains" key="contains" text="Contains"/>
-                                                        <core:Item id="createStarts" key="startswith" text="Starts with"/>
+                                                        <core:Item id="createStarts" key="STARTS WITH" text="Starts with"/>
                                                     </m:Select>
                                                     <m:Input
                                                         id="createValueInput1"

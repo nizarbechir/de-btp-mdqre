@@ -8,7 +8,7 @@ Content-Type: application/json
 {
     "description":"my first rule",
     "andBinaryOperator":true,
-    "entity_name":"A_AddressHomePageURL",
+    "entity_name":"A_AddressEmailAddress",
     "entity_service_name":"BusinessPartnerService"
 }
 ###
@@ -25,36 +25,11 @@ Content-Type: application/json
     "operator":"STARTS WITH",
     "value":"info@",
     "rule_ID":"{{ruleId}}",
-    "attribute_name":"EmailAddress",
-    "attribute_entity_name":"A_AddressEmailAddress",
-    "attribute_entity_service_name":"BusinessPartnerService"
+    "attribute_name":"EmailAddress"
+    
 }
 ###
-POST {{baseUrl}}/rules/Conditions
-Accept-Language: de
-Content-Type: application/json
 
-{
-    "operator":">",
-    "value":"16",
-    "rule_ID":"{{ruleId}}",
-    "attribute_name":"IsDefaultEmailAddress",
-
-}
-
-###
-POST {{baseUrl}}/rules/Conditions
-Accept-Language: de
-Content-Type: application/json
-
-
-{
-    "operator":"=",
-    "value":"true",
-    "rule_ID":"2bdea009-e23c-4c20-b6f3-7957eb78b8fe",
-    "attribute_name":"IsDefaultURLAddress"
-   
-}
 ###
 POST {{baseUrl}}/rules/Actions
 Accept-Language: de
@@ -62,13 +37,14 @@ Content-Type: application/json
 
 
 {
-    "operator":">",
-    "value":"16",
+    "operator":"=",
+    "value":"true",
     "rule_ID":"{{ruleId}}",
-    "attribute_name":"URLFieldLength"
-
+    "attribute_name":"IsDefaultEmailAddress"
+   
 }
 ###
+
 GET {{baseUrl}}/rules/Violations
 
 ###
@@ -83,7 +59,8 @@ POST {{baseUrl}}/rules/getSelects
 Content-Type: application/json
 
 {
-    "ruleID":"f4fd2c56-a3d9-428c-87dc-206154b52d01"
+    "ruleID":"{{ruleId}}"
+
 }
 ###
 # @name getRecord
@@ -95,9 +72,9 @@ GET {{baseUrl}}/rules/Records?$filter=ID eq '751ecdcf-0ae3-4962-99ed-d9ca366fadb
 ###
 GET {{baseUrl}}/rules/Attributes?$filter=type eq 'number' 
 ###
-GET {{baseUrl}}/rules/Elements?$filter=attribute_entity_name eq 'A_AddressHomePageURL'
+GET {{baseUrl}}/rules/Attributes?$filter=name eq 'BusinessPartner'
 ###
-GET {{baseUrl}}/rules/Elements?$filter=attribute_name eq 'NameCountry'
+GET {{baseUrl}}/rules/Elements?$filter=record_ID eq 'd2b9c344-9bca-457f-89cb-69f1f76e6a6d'
 ###
 PUT {{baseUrl}}/rule/Rules('8d1bfd54-de48-44ca-9244-3e2575b99046')
 Content-Type: application/json
@@ -130,9 +107,6 @@ Content-Type: application/json
      "entity_service_name":"SalesOrderService"
 }
 ###
-GET {{baseUrl}}/rules/Attributes?$filter=name eq 'BusinessPartnerFullName'
+GET {{baseUrl}}/rules/Attributes?$filter=entity_name eq 'A_AddressHomePageURL'
 ###
 GET {{baseUrl}}/rules/Attributes?$filter=name eq 'AccountingDocExternalReference'
-
-###
-GET {{baseUrl}}/rules/Rules('ed8bb234-189c-45cb-abe6-a24f209ac405')?$expand=Conditions
