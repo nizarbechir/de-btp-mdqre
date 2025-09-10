@@ -108,11 +108,12 @@
                                         placeholder="Enter rule description"/>
 
                                     <m:Label id="createServiceNameLabel" text="Service Name"/>
-                                    <m:Input
+                                    <m:Select
                                         id="createServiceInput"
-                                        value="{/entity_service_name}"
-                                        editable="true"
-                                        placeholder="Enter rule service"/>
+                                        selectedKey="{/entity_service_name}"
+                                        editable="true">
+                                        <core:Item id="BusinessPartnerService1" key="BusinessPartnerService" text="BusinessPartnerService"/>
+                                    </m:Select>
                                     
                                     <m:Label id="createTargetEntityFormLabel" text="Target Entity" required="true"/>
                                     <m:Input
@@ -205,8 +206,11 @@
                                                         <core:Item id="createEqual1" key="=" text="Equals (=)"/>
                                                         <core:Item id="createGreater1" key=">" text="Greater than (>)"/>
                                                         <core:Item id="createLess1" key="&lt;" text="Less than (&lt;)"/>
-                                                        <core:Item id="createContains1" key="contains" text="Contains"/>
+                                                        <core:Item id="greaterEqual" key=">=" text="Greater than equal (>=)"/>
+                                                        <core:Item id="lessewqual" key="&lt;=" text="Less than equal (&lt;=)"/>
+                                                        <core:Item id="createContains1" key="CONTAINS" text="Contains"/>
                                                         <core:Item id="createStarts1" key="STARTS WITH" text="Starts with"/>
+                                                        <core:Item id="createEnds1" key="ENDS WITH" text="Ends with"/>
                                                     </m:Select>
                                                     <m:Input
                                                         id="createValueInput"
@@ -277,11 +281,14 @@
                                                         id="createOperatorInput1"
                                                         selectedKey="{operator}"
                                                         editable="true">
-                                                        <core:Item id="createEqual" key="=" text="Equals (=)"/>
-                                                        <core:Item id="createGreater" key=">" text="Greater than (>)"/>
-                                                        <core:Item id="createLess" key="&lt;" text="Less than (&lt;)"/>
-                                                        <core:Item id="createContains" key="contains" text="Contains"/>
-                                                        <core:Item id="createStarts" key="STARTS WITH" text="Starts with"/>
+                                                        <core:Item id="createEqual2" key="=" text="Equals (=)"/>
+                                                        <core:Item id="createGreater2" key=">" text="Greater than (>)"/>
+                                                        <core:Item id="createLess2" key="&lt;" text="Less than (&lt;)"/>
+                                                        <core:Item id="greaterEqual2" key=">=" text="Greater than equal (>=)"/>
+                                                        <core:Item id="lessewqual2" key="&lt;=" text="Less than equal (&lt;=)"/>
+                                                        <core:Item id="createContains2" key="CONTAINS" text="Contains"/>
+                                                        <core:Item id="createStarts12" key="STARTS WITH" text="Starts with"/>
+                                                        <core:Item id="createEnds12" key="ENDS WITH" text="Ends with"/>
                                                     </m:Select>
                                                     <m:Input
                                                         id="createValueInput1"

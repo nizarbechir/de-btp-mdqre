@@ -6,7 +6,7 @@
     xmlns:f="sap.ui.layout.form"
     xmlns:core="sap.ui.core"
     displayBlock="true">
-    
+
     <uxap:ObjectPageLayout
         id="objectPageLayout"
         upperCaseAnchorBar="false"
@@ -30,6 +30,12 @@
 				</uxap:snappedContent>
 
                 <uxap:actions>
+                    <m:Button
+                        id="runButton"
+                        text="Run"
+                        type="Emphasized"
+                        press="onRun"
+                        visible="{= !${viewState>/editMode} }"/>
                     <m:Button
                         id="editButton"
                         text="Edit"
@@ -127,10 +133,12 @@
                                         editable="{viewState>/editMode}"/>
 
                                     <m:Label id="serviceLabel" text="Service Name"/>
-                                    <m:Input
+                                    <m:Select
                                         id="serviceInput"
-                                        value="{entity_service_name}"
-                                        editable="{viewState>/editMode}"/>
+                                        selectedKey="{entity_service_name}"
+                                        editable="{viewState>/editMode}">
+                                        <core:Item id="BusinessPartnerService" key="BusinessPartnerService" text="BusinessPartnerService"/>
+                                    </m:Select>
                                     
                                     <m:Label id="targetEntityFormLabel" text="Target Entity" required="true"/>
                                     <m:Input
@@ -144,10 +152,10 @@
                                     <m:Label id="binaryOperatorLabel" text="Binary Operator"/>
                                     <m:Select
                                         id="binaryConditionSelect"
-                                        selectedKey="{/conditionAndBinaryOperator}"
+                                        selectedKey="{andBinaryOperator}"
                                         editable="{viewState>/editMode}">
-                                        <core:Item id="and" key="true" text="And"/>
-                                        <core:Item id="or" key="false" text="Or"/>
+                                        <core:Item id="and" key="Yes" text="And"/>
+                                        <core:Item id="or" key="No" text="Or"/>
                                     </m:Select>
                                     
                                     <m:Label id="priorityFormLabel" text="Priority"/>
@@ -216,16 +224,10 @@
                                                         showValueHelp="true"
                                                         valueHelpOnly="true"
                                                         valueHelpRequest="handleFieldValueHelp"/>
-                                                    <m:Select
+                                                    <m:Input
                                                         id="operatorInput"
-                                                        selectedKey="{operator}"
-                                                        editable="{viewState>/editMode}">
-                                                        <core:Item id="equal" key="=" text="Equals (=)"/>
-                                                        <core:Item id="greater" key=">" text="Greater than (>)"/>
-                                                        <core:Item id="less" key="&lt;" text="Less than (&lt;)"/>
-                                                        <core:Item id="contains" key="contains" text="Contains"/>
-                                                        <core:Item id="starts" key="startswith" text="Starts with"/>
-                                                    </m:Select>
+                                                        value="{operator}"
+                                                        editable="{viewState>/editMode}"/>
                                                     <m:Input
                                                         id="valueInput"
                                                         value="{value}"
@@ -297,8 +299,8 @@
                                                         <core:Item id="equal1" key="=" text="Equals (=)"/>
                                                         <core:Item id="greater1" key=">" text="Greater than (>)"/>
                                                         <core:Item id="less1" key="&lt;" text="Less than (&lt;)"/>
-                                                        <core:Item id="contains1" key="contains" text="Contains"/>
-                                                        <core:Item id="starts1" key="startswith" text="Starts with"/>
+                                                        <core:Item id="contains1" key="CONTAINS" text="Contains"/>
+                                                        <core:Item id="starts1" key="STARTS WITH" text="Starts with"/>
                                                     </m:Select>
                                                     <m:Input
                                                         id="valueInput1"
@@ -315,7 +317,59 @@
                 </uxap:subSections>
             </uxap:ObjectPageSection>
 
-            
+            <uxap:ObjectPageSection
+                id="violationsSection"
+                title="Violations">
+                <uxap:subSections>
+                    <uxap:ObjectPageSubSection id="violationsSubSection">
+                        <uxap:blocks>
+                            <m:Panel id="violationsPanel">
+                            <m:headerToolbar>
+                                <m:Toolbar id="violationstoolbar">
+                                    <m:Title 
+                                        id="violationsCountTitle"
+                                        text="Violations ({violation>/length})"/>
+                                    <m:ToolbarSpacer id="space67" />
+                                    <m:ToolbarSpacer id="space68" />
+                                    <m:Button 
+                                        id="refreshViolationsBtn"
+                                        text=""
+                                        type="Transparent"
+                                        icon="sap-icon://refresh"
+                                        press="onRefreshViolations"/>
+                                </m:Toolbar>
+                            </m:headerToolbar>
+                                <m:content>
+                                    <m:Table
+                                        id="violationsTable"
+                                        items="{
+                                            path: 'violation'
+                                            }"
+                                        mode="None"
+                                        delete="onDeleteAction">
+                                        <m:columns>
+                                            <m:Column id="column111">
+                                                <m:Text id="key" text="Record ID"/>
+                                            </m:Column>
+                                        </m:columns>
+                                        <m:items>
+                                            <m:ColumnListItem id="itemsViolations">
+                                                <m:cells>
+                                                    <m:Label 
+                                                    id="violationsItems"
+                                                    text="{record_ID}"
+                                                    />
+                                                </m:cells>
+                                            </m:ColumnListItem>
+                                        </m:items>
+                                    </m:Table>
+                                </m:content>
+                            </m:Panel>
+                        </uxap:blocks>
+                    </uxap:ObjectPageSubSection>
+                </uxap:subSections>
+            </uxap:ObjectPageSection>
+
         </uxap:sections>
         
     </uxap:ObjectPageLayout>

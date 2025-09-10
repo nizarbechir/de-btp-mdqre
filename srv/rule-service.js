@@ -343,7 +343,8 @@ class RuleService extends cds.ApplicationService {
     return opposite;
   }
 
-  async querieConfig(req) {
+  async querieConfig(req, entity) {
+    console.log("its working now!!!")
     let {
       attribute_name,
       value,
@@ -352,10 +353,11 @@ class RuleService extends cds.ApplicationService {
       operator,
       rule_ID,
     } = req.data;
-    const entityName = req.target.name.split(".").pop();
+    const entityName = entity || req.target.name.split(".").pop();
+    console.log("this entity=" + entityName);
+
     const { Attributes, Rules, Actions, Conditions } = this.entities;
     const ID = req.params[0];
-    console.log(operator);
     const querie = entityName === "Conditions" ? Conditions : Actions;
     if (req.event === "UPDATE" && ID) {
       try {
@@ -415,24 +417,26 @@ class RuleService extends cds.ApplicationService {
       const rule = await SELECT.one.from(Rules).where({
         ID: rule_ID,
       });
-      if (
-        attribute_entity_name === null ||
-        attribute_entity_name === undefined
-      ) {
-        attribute_entity_name = rule.entity_name;
-        req.data.attribute_entity_name = rule.entity_name;
-      } else if (attribute_entity_name !== rule.entity_name) {
-        return req.error(`Invalid_Inserted_Data`);
-      }
+      if (rule) {
+        if (
+          attribute_entity_name === null ||
+          attribute_entity_name === undefined
+        ) {
+          attribute_entity_name = rule.entity_name;
+          req.data.attribute_entity_name = rule.entity_name;
+        } else if (attribute_entity_name !== rule.entity_name) {
+          return req.error(`Invalid_Inserted_Data`);
+        }
 
-      if (
-        attribute_entity_service_name === null ||
-        attribute_entity_service_name === undefined
-      ) {
-        attribute_entity_service_name = rule.entity_service_name;
-        req.data.attribute_entity_service_name = rule.entity_service_name;
-      } else if (attribute_entity_service_name !== rule.entity_service_name) {
-        return req.error(`Invalid_Inserted_Data`);
+        if (
+          attribute_entity_service_name === null ||
+          attribute_entity_service_name === undefined
+        ) {
+          attribute_entity_service_name = rule.entity_service_name;
+          req.data.attribute_entity_service_name = rule.entity_service_name;
+        } else if (attribute_entity_service_name !== rule.entity_service_name) {
+          return req.error(`Invalid_Inserted_Data`);
+        }
       }
       const attributeResult = await SELECT.one.from(Attributes).where({
         name: attribute_name,
@@ -635,8 +639,7 @@ class RuleService extends cds.ApplicationService {
 
   async ruleConfig(req) {
     const ID = req.params[0];
-    const { entity_service_name, entity_name, description, andBinaryOperator } =
-      req.data;
+    const { entity_service_name, entity_name, description, andBinaryOperator } = req.data;
     const { Entities, Rules } = this.entities;
 
     if (req.event === "UPDATE" && ID) {
@@ -646,24 +649,17 @@ class RuleService extends cds.ApplicationService {
           return req.error("Rule_Not_Found", [`Rule with ID ${ID} not found`]);
         }
 
-        // Set defaults for undefined values (preserve existing data)
-        if (description === undefined) {
-          req.data.description = existingRule.description;
-        }
-        if (andBinaryOperator === undefined) {
-          req.data.andBinaryOperator = existingRule.andBinaryOperator;
-        }
+        // Preserve existing values if not provided
+        req.data.description = description ?? existingRule.description;
+        req.data.andBinaryOperator = andBinaryOperator ?? existingRule.andBinaryOperator;
 
         if (entity_name === undefined && entity_service_name === undefined) {
           req.data.entity_name = existingRule.entity_name;
           req.data.entity_service_name = existingRule.entity_service_name;
-        } else if (
-          entity_name !== undefined ||
-          entity_service_name !== undefined
-        ) {
+        } else {
           req.data.entity_name = entity_name || existingRule.entity_name;
-          req.data.entity_service_name =
-            entity_service_name || existingRule.entity_service_name;
+          req.data.entity_service_name = entity_service_name || existingRule.entity_service_name;
+
           const entityInfo = await SELECT.one
             .from(Entities)
             .where({
@@ -673,9 +669,7 @@ class RuleService extends cds.ApplicationService {
             .columns(["service_name"]);
 
           if (!entityInfo) {
-            return req.error("Entity_Not_Found", [
-              `Entity '${entity_name}' not found`,
-            ]);
+            return req.error("Entity_Not_Found", [`Entity '${entity_name}' not found`]);
           }
         }
       } catch (error) {
@@ -683,7 +677,9 @@ class RuleService extends cds.ApplicationService {
           `Failed to validate update data: ${error.message}`,
         ]);
       }
-    } else if (req.event === "CREATE") {
+    }
+
+    if (req.event === "CREATE") {
       try {
         if (!entity_name) {
           return req.error("Missing_Required_Field", [
@@ -698,7 +694,7 @@ class RuleService extends cds.ApplicationService {
 
         if (!entityInfo) {
           return req.error("Service_Mismatch", [
-            `Service '${entity_service_name}' does not match entity '${entity_name}' service '${entityInfo.service_name}'`,
+            `Service '${entity_service_name}' does not match entity '${entity_name}'`,
           ]);
         }
       } catch (error) {
@@ -706,6 +702,35 @@ class RuleService extends cds.ApplicationService {
           `Failed to validate create data: ${error.message}`,
         ]);
       }
+    }
+
+    await this.processNestedItems(req.data.Conditions, "Conditions");
+    await this.processNestedItems(req.data.Actions, "Actions");
+  }
+  async processNestedItems(nestedItems, entityType) {
+    if (!Array.isArray(nestedItems) || nestedItems.length === 0) {
+      return;
+    }
+
+    for (let i = 0; i < nestedItems.length; i++) {
+      const item = nestedItems[i];
+
+      const mockReq = {
+        event: "CREATE",
+        target: { name: `RuleService.${entityType}` },
+        data: { ...item },
+        params: [],
+        error: (code, details) => {
+          throw new Error(
+            `${entityType} validation failed: ${code} - ${details}`
+          );
+        },
+      };
+
+      await this.querieConfig(mockReq);
+
+      // Update the nested item with processed data
+      nestedItems[i] = mockReq.data;
     }
   }
 }

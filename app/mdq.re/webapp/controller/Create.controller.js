@@ -25,7 +25,7 @@ sap.ui.define(
         var oViewModel = new JSONModel({
           name: "",
           description: "",
-          entity_service_name: "",
+          entity_service_name: "BusinessPartnerService",
           entity_name: "",
           andBinaryOperator: true,
           priority: "Medium",
@@ -65,7 +65,7 @@ sap.ui.define(
           description: oData.description,
           entity_name: oData.entity_name,
           entity_service_name: oData.entity_service_name,
-          andBinaryOperator: oData.andBinaryOperator === "true",
+          andBinaryOperator: oData.andBinaryOperator === 'true',
           priority: oData.priority || oData.priority_code, // normalize priority
 
           // Capitalized keys to match OData
@@ -184,7 +184,7 @@ sap.ui.define(
        */
       onDeleteCondition: function (oEvent) {
         var oModel = this.getView().getModel();
-        var aConditions = oModel.getProperty("/Conditions");
+        var aConditions = oModel.getProperty("/conditions");
         var oBindingContext = oEvent
           .getParameter("listItem")
           .getBindingContext();
@@ -192,7 +192,7 @@ sap.ui.define(
 
         // Remove the condition
         aConditions.splice(parseInt(iIndex), 1);
-        oModel.setProperty("/Conditions", aConditions);
+        oModel.setProperty("/conditions", aConditions);
         MessageToast.show("Condition deleted");
       },
 
@@ -420,9 +420,12 @@ sap.ui.define(
         oModel.setData({
           name: "",
           description: "",
-          targetEntity: "",
-          priority_code: "M",
+          entity_service_name: "BusinessPartnerService",
+          entity_name: "",
+          andBinaryOperator: true,
+          priority: "Medium",
           conditions: [],
+          actions: [],
         });
       },
 

@@ -24,7 +24,7 @@ Content-Type: application/json
 {
     "operator":"STARTS WITH",
     "value":"info@",
-    "rule_ID":"{{ruleId}}",
+    "rule_ID":"d68d7091-e3f5-47ba-8e7b-cff8b2df099e",
     "attribute_name":"EmailAddress"
     
 }
@@ -39,7 +39,7 @@ Content-Type: application/json
 {
     "operator":"=",
     "value":"true",
-    "rule_ID":"{{ruleId}}",
+    "rule_ID":"d68d7091-e3f5-47ba-8e7b-cff8b2df099e",
     "attribute_name":"IsDefaultEmailAddress"
    
 }
@@ -52,7 +52,7 @@ POST {{baseUrl}}/rules/getViolations
 Content-Type: application/json
 
     {
-        "ruleID":"{{ruleId}}"
+        "ruleID":"6de2705e-491f-46e3-b157-e8203961449a"
     }
 ###
 POST {{baseUrl}}/rules/getSelects
@@ -110,3 +110,9 @@ Content-Type: application/json
 GET {{baseUrl}}/rules/Attributes?$filter=entity_name eq 'A_AddressHomePageURL'
 ###
 GET {{baseUrl}}/rules/Attributes?$filter=name eq 'AccountingDocExternalReference'
+
+###
+GET {{baseUrl}}/rules/Rules('1da0bcd7-9a65-4cf5-b709-6a6a8d994226')?$expand=Actions
+
+###
+GET {{baseUrl}}/rules/Rules?$expand=Conditions

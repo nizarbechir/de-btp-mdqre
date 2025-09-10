@@ -41,7 +41,7 @@ sap.ui.define(
 
         var sPath = "/Rules(" + sRuleId + ")";
         var oContextBinding = oModel.bindContext(sPath, null, {
-          $expand: "Conditions,Actions",
+          $expand: "Conditions,Actions,violation",
           $select: "*",
         });
 
@@ -87,7 +87,7 @@ sap.ui.define(
                     function (oError) {
                       MessageBox.error(
                         "Error deleting rule: " +
-                          (oError.message || "Unknown error")
+                        (oError.message || "Unknown error")
                       );
                     }.bind(this)
                   );
@@ -99,50 +99,49 @@ sap.ui.define(
 
       onEdit: function () {
         var oContext = this.getView().getBindingContext();
-        var oData = Object.assign({}, oContext.getObject());
-        console.log("data: ", oData);
-
         var oViewModel = this.getView().getModel("viewState");
-        oViewModel.setProperty("/originalData", oData);
+
+        // Create a draft
+        oContext.getModel().getDependentBindings(oContext).forEach(function (oBinding) {
+          oBinding.hasPendingChanges() && oBinding.resetChanges();
+        });
+
         oViewModel.setProperty("/editMode", true);
       },
 
       onCancel: function () {
-        var oViewModel = this.getView().getModel("viewState");
         var oContext = this.getView().getBindingContext();
         var oModel = oContext.getModel();
-        var oOriginal = oViewModel.getProperty("/originalData");
+        var oViewModel = this.getView().getModel("viewState");
 
-        if (oOriginal) {
-          // Overwrite current entity with the original snapshot
-          Object.keys(oOriginal).forEach(function (key) {
-            // Only set primitive values (backend won’t accept objects directly)
-            if (typeof oOriginal[key] !== "object") {
-              oContext.setProperty(key, oOriginal[key]);
+        // Reset changes for specific group instead of all changes
+        try {
+          // If you're using a specific group, reset only that group
+          oModel.resetChanges("updateGroup");
+        } catch (error) {
+          // Fallback to resetting dependent bindings individually
+          oModel.getDependentBindings(oContext).forEach(function (oBinding) {
+            if (oBinding.hasPendingChanges()) {
+              try {
+                oBinding.resetChanges();
+              } catch (e) {
+                console.warn("Could not reset binding:", e);
+              }
             }
           });
-
-          oModel
-            .submitBatch("updateGroup")
-            .then(() => {
-              sap.m.MessageToast.show("Changes reverted");
-              oViewModel.setProperty("/editMode", false);
-            })
-            .catch((err) => {
-              sap.m.MessageBox.error("Cancel failed: " + err.message);
-            });
-        } else {
-          oViewModel.setProperty("/editMode", false);
         }
+
+        oViewModel.setProperty("/editMode", false);
+        sap.m.MessageToast.show("Changes cancelled");
       },
 
       onSave: function () {
-        var oModel = this.getView().getModel();
+        var oContext = this.getView().getBindingContext();
+        var oModel = oContext.getModel();
         var oViewModel = this.getView().getModel("viewState");
 
         if (oModel.hasPendingChanges()) {
-          oModel
-            .submitBatch("updateGroup")
+          oModel.submitBatch("updateGroup")
             .then(() => {
               sap.m.MessageToast.show("Changes saved");
               oViewModel.setProperty("/editMode", false);
@@ -154,6 +153,30 @@ sap.ui.define(
           oViewModel.setProperty("/editMode", false);
         }
       },
+
+      onRun: async function () {
+        var oContext = this.getView().getBindingContext();
+        var sRuleId = oContext.getProperty("ID");
+
+        try {
+          const res = await fetch("/rules/getViolations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ruleID: sRuleId })
+          });
+          console.log("Action executed, status:", res.status);
+          sap.m.MessageToast.show("Violations fetched successfully!");
+        } catch (err) {
+          console.error("Error executing action", err);
+          sap.m.MessageToast.show("Fialed to fetch violations!");
+        }
+      },
+
+      onRefreshViolations: function () {
+
+
+      },
+
 
       onAddCondition: function () {
         var oTable = this.byId("conditionsTable");
@@ -237,9 +260,8 @@ sap.ui.define(
         //var bpModel = this.getView().getModel('bpModel')
         //console.log(bpModel)
 
-        // Create JSONModel for service document
         var oJsonModel = new sap.ui.model.json.JSONModel();
-        oJsonModel.loadData("/odata/v4/api-business-partner"); // loads { value: [...] }
+        oJsonModel.loadData("/odata/v4/business-partner");
 
         this._entityDialog.then(
           function (oDialog) {
@@ -263,9 +285,6 @@ sap.ui.define(
           //var oModel = this.getView().getModel()
           //oModel.setProperty('/targetEntity', sSelectedText)
         }
-
-        // Close the dialog
-        oEvent.getSource().close();
       },
 
       onEntitySearch: function (oEvent) {
@@ -315,10 +334,11 @@ sap.ui.define(
         // 🔹 Get the target entity from the rule object
         var oContext = this.getView().getBindingContext();
         var oData = oContext.getObject();
-        var sEntity = oData.targetEntity; // e.g. "A_BusinessPartner"
+        var sEntity = oData.entity_name;
+
 
         // Load metadata and extract only fields of that entity
-        fetch("/odata/v4/api-business-partner/$metadata")
+        fetch("/odata/v4/business-partner/$metadata")
           .then(function (response) {
             return response.text();
           })
@@ -363,17 +383,18 @@ sap.ui.define(
       // TODO: fix the bugs
       onFieldDialogConfirm: function (oEvent) {
         var oSelectedItem = oEvent.getParameter("selectedItem");
+        console.log("items: ", oSelectedItem)
 
         if (oSelectedItem) {
           var sFieldName = oSelectedItem.getTitle();
+          console.log("field: ", sFieldName)
           // Update the input
           this.byId("fieldInput").setValue(sFieldName);
           // Update the model
-          var oModel = this.getView().getModel();
-          oModel.setProperty("/fieldName", sFieldName);
+          //var oModel = this.getView().getModel();
+          //oModel.setProperty("/attribute_name", sFieldName);
         }
 
-        oEvent.getSource().close();
       },
 
       onFieldSearch: function (oEvent) {
