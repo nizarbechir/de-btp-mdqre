@@ -15,16 +15,12 @@ service RuleService @(path:'/rules'){
     @readonly
     entity Attributes as projection on db.Attributes;
     @readonly
-    entity Records as projection on db.Records;
+    entity PrimaryKeys as projection on db.PrimaryKeys;
 
     action getViolations(
     ruleID: db.Rules:ID
 ) returns array of {
-    violationID: db.Violations:record;
+    violationID: db.Violations:ID;
 };
-  action getSelects(
-    ruleID: db.Rules:ID
-) returns array of {
-    violationID: db.Violations:record;
-};
+
 }

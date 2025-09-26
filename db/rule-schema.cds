@@ -41,9 +41,15 @@ entity Services {
                        on entities.service = $self;
 }
 
-entity Violations {
-    key rule   : Association to Rules   @assert.target;
-    key record : Association to Records @assert.target;
+
+entity Violations:cuid {
+    rule:Association to Rules @assert.target;
+    element:Association to many Elements on element.violation=$self
+
+}
+entity PrimaryKeys:cuid{
+    key entity:Association to Entities @assert.target;
+    elementName:String;
 }
 
 entity Entities {
@@ -53,8 +59,7 @@ entity Entities {
                          on rules.entity = $self;
         attributes : Association to many Attributes
                          on attributes.entity = $self;
-        records    : Association to many Records
-                         on records.entity = $self
+        primaryKeys:Composition of  many PrimaryKeys on primaryKeys.entity=$self
 }
 
 entity Attributes {
@@ -69,19 +74,14 @@ entity Attributes {
                          on conditions.attribute = $self;
 }
 
-entity Elements {
-        value     : String;
-    key attribute : Association to Attributes @assert.target;
-    key record    : Association to Records    @assert.target;
+entity Elements{
+    value:String;
+    key attribute:Association to Attributes @assert.target;
+    key violation:Association to Violations @assert.target;
+
 }
 
-entity Records : cuid {
-    elements  : Composition of many Elements
-                    on elements.record = $self;
-    entity    : Association to Entities @assert.target;
-    violation : Association to many Violations
-                    on violation.record = $self;
-}
+
 
 type Operators  : String(20) enum {
     EQ = '=';

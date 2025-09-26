@@ -349,7 +349,7 @@
                                         delete="onDeleteAction">
                                         <m:columns>
                                             <m:Column id="column111">
-                                                <m:Text id="key" text="Record ID"/>
+                                                <m:Text id="key" text="ID"/>
                                             </m:Column>
                                         </m:columns>
                                         <m:items>
@@ -357,7 +357,7 @@
                                                 <m:cells>
                                                     <m:Label 
                                                     id="violationsItems"
-                                                    text="{record_ID}"
+                                                    text="{ID}"
                                                     />
                                                 </m:cells>
                                             </m:ColumnListItem>

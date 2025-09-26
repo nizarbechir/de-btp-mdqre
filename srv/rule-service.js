@@ -1,3 +1,4 @@
+const { v4: uuid } = require("uuid");
 class RuleService extends cds.ApplicationService {
   init() {
     const { Queries, Rules } = this.entities;
@@ -8,48 +9,41 @@ class RuleService extends cds.ApplicationService {
       this.querieConfig
     );
     this.on("getViolations", this.handleGetViolations);
-    this.on("getSelects", this.handleSelect);
+
     return super.init();
-  }
-  async handleSelect(req) {
-    const { ruleID } = req.data;
-    const { Elements, Rules } = this.entities;
-    const rule = await SELECT.one.from(Rules).where({ ID: ruleID });
-    const subSet = await this.generateSubSet(rule, Elements);
-    return subSet;
   }
   async handleGetViolations(req) {
     const { ruleID } = req.data;
-    const { Rules, Actions, Violations, Elements } = this.entities;
+    const { Rules, Violations, PrimaryKeys, Elements } = this.entities;
     await DELETE.from(Violations);
     const rule = await SELECT.one.from(Rules).where({ ID: ruleID });
     if (rule == undefined) {
       return req.error(`Rule_Not_Found`);
     }
-    const queries = await SELECT.from(Actions).where({ rule_ID: rule.ID });
+    const service = rule.entity_service_name;
+    const remoteService = await cds.connect.to(service);
 
-    const subSet = await this.generateSubSet(rule, Elements);
-    let violations = [];
-    for (const querie of queries) {
-      let records = subSet.map((rec) => rec.record_ID);
-      const whereCondition = this.generateSelectQuery(
-        querie.value,
-        querie.operator,
-        false
-      );
-      const elements = await SELECT.from(Elements).where({
-        record_ID: { in: records },
-        attribute_name: querie.attribute_name,
-        ...whereCondition,
-      }).columns`record_ID`;
-      for (const e of elements) {
-        if (!violations.includes(e)) {
-          await INSERT.into(Violations).entries({
-            rule_ID: ruleID,
-            record_ID: e.record_ID,
-          });
-          violations.push(e);
-        }
+    const keys = await SELECT.from(PrimaryKeys).where({
+      entity_name: rule.entity_name,
+      entity_service_name: rule.entity_service_name,
+    }).columns`elementName`;
+    const violations = await this.generateConditionsQueries(
+      rule,
+      remoteService,
+      keys
+    );
+    console.log(violations);
+    for (const v of violations) {
+      const newID = uuid();
+      await INSERT.into(Violations).entries({ ID: newID, rule_ID: ruleID });
+      for (const [key, value] of Object.entries(v)) {
+        await INSERT.into(Elements).entries({
+          value,
+          attribute_name: key,
+          attribute_entity_name: rule.entity_name,
+          attribute_entity_service_name: rule.entity_service_name,
+          violation_ID: newID,
+        });
       }
     }
     return SELECT.from(Violations);
@@ -61,119 +55,110 @@ class RuleService extends cds.ApplicationService {
     attribute_entity_service_name
   ) {
     const { Attributes } = this.entities;
-    console.log(
-      attribute_name,
-      attribute_entity_name,
-      attribute_entity_service_name
-    );
     const { type: AttributeType } = await SELECT.one.from(Attributes).where({
       name: attribute_name,
       entity_name: attribute_entity_name,
       entity_service_name: attribute_entity_service_name,
     }).columns`type`;
-    if (!AttributeType) {
-      return false;
-    }
-
     return AttributeType === "number";
   }
+  async generateAndWhere(queries, query, type) {
+    for (let i = 0; i < queries.length; i++) {
+      const querie = queries[i];
+      const isNumeric = await this.isNumericAttribute(
+        querie.attribute_name,
+        querie.attribute_entity_name,
+        querie.attribute_entity_service_name
+      );
 
-  async generateSubSet(rule, Elements) {
-    const { Conditions } = this.entities;
+      let value;
+      if (isNumeric) {
+        value = Number(querie.value);
+      } else {
+        value = querie.value;
+      }
+
+      const whereCondition = this.generateSelectQuery(
+        value,
+        querie.operator,
+        type === "condition",
+        querie.attribute_name
+      );
+      query.where(whereCondition);
+    }
+  }
+
+  async generateConditionsQueries(rule, remoteService, keys) {
+    const { Conditions, Actions } = this.entities;
+    const keyColumns = keys.map((k) => k.elementName);
+    const actions = await SELECT.from(Actions).where({
+      rule_ID: rule.ID,
+    });
+    if (actions.length === 0) {
+      return [];
+    }
     const conditions = await SELECT.from(Conditions).where({
       rule_ID: rule.ID,
     });
 
-    if (conditions.length === 0) return [];
-
-    let subSet = [];
-
+    const query = SELECT.from(rule.entity_name);
+    await this.generateAndWhere(actions, query, "action");
     if (rule.andBinaryOperator) {
+      await this.generateAndWhere(conditions, query, "condition");
+
+      query.columns(keyColumns);
+      console.log("Preparing to send query to remote service:", {
+        service: remoteService.name,
+        query: JSON.stringify(query),
+      });
+      return await remoteService.run(query);
+    } else {
+      const subSet = [];
+      const seenKeys = new Set();
+
       for (let i = 0; i < conditions.length; i++) {
         const querie = conditions[i];
-        const isNumeric = await this.isNumericAttribute(
-          querie.attribute_name,
-          querie.attribute_entity_name,
-          querie.attribute_entity_service_name
-        );
 
-        const whereCondition = this.generateSelectQuery(
-          querie.value,
-          querie.operator,
-          true,
-          isNumeric
-        );
+        try {
+          const isNumeric = await this.isNumericAttribute(
+            querie.attribute_name,
+            querie.attribute_entity_name,
+            querie.attribute_entity_service_name
+          );
 
-        let elements;
-
-        if (isNumeric && typeof whereCondition === "string") {
-          elements = await SELECT.from(Elements).where(
-            cds.parse.expr(`
-            attribute_name = '${querie.attribute_name}' AND 
-            attribute_entity_name = '${querie.attribute_entity_name}' AND 
-            attribute_entity_service_name = '${querie.attribute_entity_service_name}' AND 
-            ${whereCondition}
-          `)
-          ).columns`record_ID`;
-        } else {
-          elements = await SELECT.from(Elements).where({
-            attribute_name: querie.attribute_name,
-            attribute_entity_name: querie.attribute_entity_name,
-            attribute_entity_service_name: querie.attribute_entity_service_name,
-            ...whereCondition,
-          }).columns`record_ID`;
-        }
-
-        if (i === 0) {
-          subSet = [...elements];
-        } else {
-          const elementIds = new Set(elements.map((e) => e.record_ID));
-          subSet = subSet.filter((record) => elementIds.has(record.record_ID));
-        }
-        if (subSet.length === 0) break;
-      }
-    } else {
-      for (const querie of conditions) {
-        const isNumeric = await this.isNumericAttribute(
-          querie.attribute_name,
-          querie.attribute_entity_name,
-          querie.attribute_entity_service_name
-        );
-        console.log(isNumeric);
-        const whereCondition = this.generateSelectQuery(
-          querie.value,
-          querie.operator,
-          true,
-          isNumeric
-        );
-        let elements;
-        if (isNumeric && typeof whereCondition === "string") {
-          elements = await SELECT.from(Elements).where(
-            cds.parse.expr(`
-            attribute_name = '${querie.attribute_name}' AND 
-            attribute_entity_name = '${querie.attribute_entity_name}' AND 
-            attribute_entity_service_name = '${querie.attribute_entity_service_name}' AND 
-            ${whereCondition}
-          `)
-          ).columns`record_ID`;
-        } else {
-          elements = await SELECT.from(Elements).where({
-            attribute_name: querie.attribute_name,
-            attribute_entity_name: querie.attribute_entity_name,
-            attribute_entity_service_name: querie.attribute_entity_service_name,
-            ...whereCondition,
-          }).columns`record_ID`;
-        }
-
-        elements.forEach((element) => {
-          if (!subSet.includes(element.record_ID)) {
-            subSet.push(element);
+          let value;
+          if (isNumeric) {
+            value = Number(querie.value);
+          } else {
+            value = querie.value;
           }
-        });
-      }
-    }
 
-    return subSet;
+          const whereCondition = this.generateSelectQuery(
+            value,
+            querie.operator,
+            true,
+            querie.attribute_name
+          );
+
+          query.where(whereCondition).columns(keyColumns);
+
+          const res = await remoteService.run(query);
+
+          if (Array.isArray(res)) {
+            for (const record of res) {
+              const recordKey = JSON.stringify(record);
+              if (!seenKeys.has(recordKey)) {
+                seenKeys.add(recordKey);
+                subSet.push(record);
+              }
+            }
+          }
+        } catch (error) {
+          console.warn(`Error in OR condition ${i + 1}:`, error.message);
+        }
+      }
+      return subSet;
+    }
   }
 
   /**
@@ -182,127 +167,144 @@ class RuleService extends cds.ApplicationService {
    * @param {string} operator - The original operator
    * @param {boolean} condition - if condition or Action
    * @param {boolean} isNumeric - if the value should be treated as numeric (optional)
+   * @param {boolean} field - filed ro compare with
    * @returns {Object} CDS SELECT query object or raw expression string for numeric comparisons
    */
-  generateSelectQuery(value1, operator, condition, isNumeric = false) {
+  generateSelectQuery(value1, operator, condition, field) {
     let operation = operator;
     if (!condition) {
       operation = this.getOppositeOperator(operator);
     }
-    console.log(isNumeric);
-    if (isNumeric && this.isNumericOperator(operation)) {
-      return this.generateNumericCondition(value1, operation);
+
+    let sanitizedValue = value1;
+    if (typeof value1 === "string") {
+      sanitizedValue = value1.trim();
     }
+    console.log("condition");
 
     let whereCondition = {};
-    const field = "value";
 
     switch (operation) {
       case "!=":
       case "<>":
-        whereCondition[field] = { "!=": value1 };
+        whereCondition[field] = { "!=": sanitizedValue };
         break;
       case "=":
-        whereCondition[field] = value1;
+        whereCondition[field] = sanitizedValue;
         break;
       case ">=":
-        whereCondition[field] = { ">=": value1 };
+        whereCondition[field] = { ">=": sanitizedValue };
         break;
       case "<=":
-        whereCondition[field] = { "<=": value1 };
+        whereCondition[field] = { "<=": sanitizedValue };
         break;
       case ">":
-        whereCondition[field] = { ">": value1 };
+        whereCondition[field] = { ">": sanitizedValue };
         break;
       case "<":
-        whereCondition[field] = { "<": value1 };
+        whereCondition[field] = { "<": sanitizedValue };
         break;
-      case "NOT LIKE":
-        whereCondition[field] = { "not like": value1 };
-        break;
+
+      // ✅ OData-friendly string ops
       case "LIKE":
-        whereCondition[field] = { like: value1 };
+        if (sanitizedValue.startsWith("%") && sanitizedValue.endsWith("%")) {
+          whereCondition = {
+            func: "substringof",
+            args: [sanitizedValue.slice(1, -1), { ref: [field] }],
+          };
+        } else if (sanitizedValue.startsWith("%")) {
+          whereCondition = {
+            func: "endswith",
+            args: [{ ref: [field] }, sanitizedValue.slice(1)],
+          };
+        } else if (sanitizedValue.endsWith("%")) {
+          whereCondition = {
+            func: "startswith",
+            args: [{ ref: [field] }, sanitizedValue.slice(0, -1)],
+          };
+        } else {
+          // no wildcards → plain equals
+          whereCondition[field] = sanitizedValue;
+        }
+        break;
+
+      case "NOT LIKE":
+        throw new Error(
+          "NOT LIKE not directly supported in OData — handle manually with NOT(...) wrapper"
+        );
+
+      case "IN":
+        whereCondition[field] = {
+          in: Array.isArray(sanitizedValue) ? sanitizedValue : [sanitizedValue],
+        };
         break;
       case "NOT IN":
         whereCondition[field] = {
-          "not in": Array.isArray(value1) ? value1 : [value1],
+          "not in": Array.isArray(sanitizedValue)
+            ? sanitizedValue
+            : [sanitizedValue],
         };
         break;
-      case "IN":
-        whereCondition[field] = {
-          in: Array.isArray(value1) ? value1 : [value1],
-        };
-        break;
+
       case "IS NOT NULL":
         whereCondition[field] = { "!=": null };
         break;
       case "IS NULL":
         whereCondition[field] = null;
         break;
+
       case "STARTS WITH":
-        whereCondition[field] = { like: `${value1}%` };
+        whereCondition = {
+          func: "startswith",
+          args: [{ ref: [field] }, `'${sanitizedValue}'`],
+        };
         break;
       case "NOT STARTS WITH":
-        whereCondition[field] = { "not like": `${value1}%` };
+        whereCondition = [
+          "not",
+          {
+            func: "startswith",
+            args: [{ ref: [field] }, `'${sanitizedValue}'`],
+          },
+        ];
         break;
       case "ENDS WITH":
-        whereCondition[field] = { like: `%${value1}` };
+        whereCondition = {
+          func: "endswith",
+          args: [{ ref: [field] }, `'${sanitizedValue}'`],
+        };
         break;
       case "NOT ENDS WITH":
-        whereCondition[field] = { "not like": `%${value1}` };
+        whereCondition = [
+          "not",
+          {
+            func: "endswith",
+            args: [{ ref: [field] }, `'${sanitizedValue}'`],
+          },
+        ];
         break;
       case "CONTAINS":
-        whereCondition[field] = { like: `%${value1}%` };
+        whereCondition = {
+          func: "substringof",
+          args: [{ val: sanitizedValue }, `'${sanitizedValue}'`],
+        };
         break;
       case "NOT CONTAINS":
-        whereCondition[field] = { "not like": `%${value1}%` };
+        whereCondition = [
+          "not",
+          {
+            func: "substringof",
+            args: [{ val: sanitizedValue }, `'${sanitizedValue}'`],
+          },
+        ];
         break;
+
       default:
         throw new Error(`Unsupported operator: ${operation}`);
     }
+
     return whereCondition;
   }
-
-  /**
-   * @param {string} operator - The operator to check
-   * @returns {boolean} True if operator is numeric
-   */
-  isNumericOperator(operator) {
-    const numericOperators = ["=", "!=", "<>", ">", "<", ">=", "<="];
-    return numericOperators.includes(operator);
-  }
-
-  /**
-   * Generates numeric condition using database casting
-   * @param {any} value1 - The value to compare
-   * @param {string} operation - The operator
-   * @returns {string} Raw SQL expression for numeric comparison
-   */
-  generateNumericCondition(value1, operation) {
-    const numericValue = parseInt(value1);
-    if (isNaN(numericValue)) {
-      throw new Error(`Invalid numeric value: ${value1}`);
-    }
-
-    switch (operation) {
-      case "=":
-        return `CAST(value AS cds.Integer) = ${numericValue}`;
-      case "!=":
-      case "<>":
-        return `CAST(value AS cds.Integer) != ${numericValue}`;
-      case ">":
-        return `CAST(value AS cds.Integer) > ${numericValue}`;
-      case "<":
-        return `CAST(value AS cds.Integer) < ${numericValue}`;
-      case ">=":
-        return `CAST(value AS cds.Integer) >= ${numericValue}`;
-      case "<=":
-        return `CAST(value AS cds.Integer) <= ${numericValue}`;
-      default:
-        throw new Error(`Unsupported numeric operator: ${operation}`);
-    }
-  }
-
   /**
    * Returns the opposite operator for a given operator
    * @param {string} operator - The original operator
@@ -343,8 +345,16 @@ class RuleService extends cds.ApplicationService {
     return opposite;
   }
 
+  /**
+   * @param {string} operator - The operator to check
+   * @returns {boolean} True if operator is numeric
+   */
+  isNumericOperator(operator) {
+    const numericOperators = ["=", "!=", "<>", ">", "<", ">=", "<="];
+    return numericOperators.includes(operator);
+  }
+
   async querieConfig(req, entity) {
-    console.log("its working now!!!")
     let {
       attribute_name,
       value,
@@ -639,7 +649,8 @@ class RuleService extends cds.ApplicationService {
 
   async ruleConfig(req) {
     const ID = req.params[0];
-    const { entity_service_name, entity_name, description, andBinaryOperator } = req.data;
+    const { entity_service_name, entity_name, description, andBinaryOperator } =
+      req.data;
     const { Entities, Rules } = this.entities;
 
     if (req.event === "UPDATE" && ID) {
@@ -649,16 +660,17 @@ class RuleService extends cds.ApplicationService {
           return req.error("Rule_Not_Found", [`Rule with ID ${ID} not found`]);
         }
 
-        // Preserve existing values if not provided
         req.data.description = description ?? existingRule.description;
-        req.data.andBinaryOperator = andBinaryOperator ?? existingRule.andBinaryOperator;
+        req.data.andBinaryOperator =
+          andBinaryOperator ?? existingRule.andBinaryOperator;
 
         if (entity_name === undefined && entity_service_name === undefined) {
           req.data.entity_name = existingRule.entity_name;
           req.data.entity_service_name = existingRule.entity_service_name;
         } else {
           req.data.entity_name = entity_name || existingRule.entity_name;
-          req.data.entity_service_name = entity_service_name || existingRule.entity_service_name;
+          req.data.entity_service_name =
+            entity_service_name || existingRule.entity_service_name;
 
           const entityInfo = await SELECT.one
             .from(Entities)
@@ -669,7 +681,9 @@ class RuleService extends cds.ApplicationService {
             .columns(["service_name"]);
 
           if (!entityInfo) {
-            return req.error("Entity_Not_Found", [`Entity '${entity_name}' not found`]);
+            return req.error("Entity_Not_Found", [
+              `Entity '${entity_name}' not found`,
+            ]);
           }
         }
       } catch (error) {
